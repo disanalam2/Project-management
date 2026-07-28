@@ -118,7 +118,7 @@ const Documents = () => {
       </div>
 
       {/* Document Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
+      <div className="responsive-grid">
         {loading ? (
           <p className="text-muted">Loading documents...</p>
         ) : filteredDocs.length > 0 ? (
@@ -168,7 +168,7 @@ const Documents = () => {
       {/* Add Modal */}
       {showAddModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '16px' }}>
-          <div className="glass-panel animate-fade-in" style={{ width: '100%', maxWidth: '500px', padding: '32px' }}>
+          <div className="glass-panel animate-fade-in modal-panel">
             <h3 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '24px' }}>Add New Document</h3>
             <form onSubmit={handleAddDocument} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div>

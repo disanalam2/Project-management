@@ -141,12 +141,10 @@ const Chat = () => {
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexDirection: isMine ? 'row-reverse' : 'row' }}>
                     
-                    <div style={{ 
+                    <div className="chat-message-bubble" style={{ 
                       background: isMine ? 'var(--primary)' : 'rgba(255,255,255,0.08)', 
-                      padding: '12px 16px', 
                       borderRadius: isMine ? '16px 16px 0 16px' : '0 16px 16px 16px', 
                       color: 'white', 
-                      fontSize: '15px',
                       position: 'relative',
                       boxShadow: isMine ? '0 4px 14px rgba(99, 102, 241, 0.2)' : 'none'
                     }}>
@@ -224,7 +222,7 @@ const Chat = () => {
         )}
 
         {/* Message Input */}
-        <form onSubmit={handleSendMessage} style={{ padding: '16px 24px', borderTop: '1px solid var(--border-color)', display: 'flex', gap: '12px', background: 'rgba(0,0,0,0.2)' }}>
+        <form onSubmit={handleSendMessage} className="chat-input-area">
           <input 
             type="text" 
             value={newMessage}

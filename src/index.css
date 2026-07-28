@@ -328,20 +328,42 @@ input:focus, textarea:focus {
   }
   
   /* Make grid 1 column on mobile */
-  .doc-grid, .members-grid {
+  .responsive-grid {
     grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  
+  .modal-panel {
+    padding: 20px !important;
   }
   
   /* Chat specific adjustments */
-  .chat-container {
-    height: calc(100vh - 60px) !important; /* adjust for header */
+  .chat-input-area {
+    padding: 12px 16px !important;
   }
   
-  .chat-messages {
-    padding: 16px !important;
+  .chat-message-bubble {
+    font-size: 14px !important;
+    padding: 10px 14px !important;
   }
-  
-  .chat-message {
-    max-width: 90% !important;
-  }
+}
+
+.responsive-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+.modal-panel {
+  width: 100%;
+  max-width: 500px;
+  padding: 32px;
+}
+
+.chat-input-area {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  gap: 12px;
+  background: rgba(0,0,0,0.2);
 }
