@@ -125,6 +125,21 @@ const Members = () => {
     }
   };
 
+  const handleChangeRole = async (memberId, memberName, currentRole) => {
+    const newRole = currentRole === 'admin' ? 'member' : 'admin';
+    const confirmChange = window.confirm(`Change ${memberName}'s role to ${newRole.toUpperCase()}?`);
+    if (!confirmChange) return;
+
+    try {
+      await setDoc(doc(db, 'members', memberId), { role: newRole }, { merge: true });
+      await setDoc(doc(db, 'users', memberId), { role: newRole }, { merge: true });
+      alert(`${memberName} is now an ${newRole}.`);
+    } catch (err) {
+      console.error("Error changing role: ", err);
+      alert("Failed to change role.");
+    }
+  };
+
   return (
     <div className="animate-fade-in">
       <div className="flex justify-between items-center mb-4">
@@ -182,14 +197,26 @@ const Members = () => {
               </div>
               
               {isAdmin && member.id !== import.meta.env.VITE_APP_USERNAME && member.id !== 'master admin' && (
-                <button 
-                  onClick={() => handleRemoveMember(member.id, member.name)}
-                  className="btn-icon"
-                  style={{ color: 'var(--danger)' }}
-                  title="Remove User"
-                >
-                  <Trash2 size={20} />
-                </button>
+                <div className="flex items-center gap-2">
+                  {isMasterAdmin && (
+                    <button 
+                      onClick={() => handleChangeRole(member.id, member.name, member.role)}
+                      className="btn-icon"
+                      style={{ color: 'var(--primary)', padding: '6px 12px', background: 'rgba(99, 102, 241, 0.1)', borderRadius: '6px', fontSize: '12px' }}
+                      title="Change Role"
+                    >
+                      Make {member.role === 'admin' ? 'Member' : 'Admin'}
+                    </button>
+                  )}
+                  <button 
+                    onClick={() => handleRemoveMember(member.id, member.name)}
+                    className="btn-icon"
+                    style={{ color: 'var(--danger)' }}
+                    title="Remove User"
+                  >
+                    <Trash2 size={20} />
+                  </button>
+                </div>
               )}
             </div>
           ))
