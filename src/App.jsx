@@ -1,5 +1,6 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import OneSignal from 'react-onesignal';
 import Login from './Login';
 import Dashboard from './Dashboard';
 import Documents from './Documents';
@@ -22,6 +23,50 @@ const ProtectedRoute = ({ children }) => {
 };
 
 function App() {
+  useEffect(() => {
+    const initOneSignal = async () => {
+      try {
+        await OneSignal.init({
+          appId: import.meta.env.VITE_ONESIGNAL_APP_ID,
+          allowLocalhostAsSecureOrigin: true,
+          notifyButton: {
+            enable: true,
+            text: {
+              'tip.state.unsubscribed': 'Allow notifications',
+              'message.prenotify': 'Click to allow notifications',
+              'dialog.main.button.subscribe': 'ALLOW NOTIFICATIONS',
+              'dialog.main.button.unsubscribe': 'TURN OFF NOTIFICATIONS'
+            }
+          },
+          promptOptions: {
+            slidedown: {
+              prompts: [
+                {
+                  type: "push",
+                  autoPrompt: true,
+                  text: {
+                    actionMessage: "We'd like to send you notifications for new chat messages and documents.",
+                    acceptButton: "Allow Notifications",
+                    cancelButton: "Later"
+                  }
+                }
+              ]
+            }
+          }
+        });
+        
+        // Force the prompt to show on every refresh ONLY if they haven't allowed yet
+        if (window.Notification && Notification.permission !== 'granted') {
+          OneSignal.Slidedown.promptPush({ force: true });
+        }
+        
+      } catch (error) {
+        console.error("OneSignal initialization failed", error);
+      }
+    };
+    initOneSignal();
+  }, []);
+
   const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem('user');
     return savedUser ? JSON.parse(savedUser) : null;

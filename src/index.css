@@ -252,3 +252,96 @@ input:focus, textarea:focus {
 .mb-4 { margin-bottom: 16px; }
 .text-muted { color: var(--text-muted); }
 .text-sm { font-size: 0.875rem; }
+
+.hamburger-btn, .mobile-close-btn {
+  display: none;
+}
+
+/* Responsive Mobile Layout */
+@media (max-width: 768px) {
+  .app-container {
+    flex-direction: column;
+  }
+  
+  .hamburger-btn {
+    display: flex;
+  }
+  
+  .mobile-close-btn {
+    display: flex;
+  }
+  
+  /* Sidebar Overlay */
+  .sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 40;
+  }
+  
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 280px;
+    height: 100vh;
+    background: var(--bg-sidebar);
+    z-index: 50;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    border-right: 1px solid var(--border-color);
+  }
+  
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  
+  .main-content {
+    flex: 1;
+    width: 100%;
+  }
+  
+  .top-header {
+    padding: 0 16px;
+    height: 60px;
+  }
+  
+  .page-title {
+    font-size: 18px;
+  }
+  
+  .user-profile span {
+    display: none; /* Hide name on mobile */
+  }
+  
+  .content-area {
+    padding: 16px;
+  }
+  
+  .glass-panel {
+    padding: 16px !important;
+  }
+  
+  /* Make grid 1 column on mobile */
+  .doc-grid, .members-grid {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* Chat specific adjustments */
+  .chat-container {
+    height: calc(100vh - 60px) !important; /* adjust for header */
+  }
+  
+  .chat-messages {
+    padding: 16px !important;
+  }
+  
+  .chat-message {
+    max-width: 90% !important;
+  }
+}

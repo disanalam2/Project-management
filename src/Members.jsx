@@ -7,6 +7,7 @@ import './index.css';
 
 const Members = () => {
   const [members, setMembers] = useState([]);
+  const [usersData, setUsersData] = useState({}); // To hold passwords for admin view
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   
@@ -19,11 +20,13 @@ const Members = () => {
   
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
+  const isMasterAdmin = user?.role === 'admin' && user?.name === 'Master Admin';
 
   useEffect(() => {
     try {
+      // 1. Fetch Members (for active status)
       const q = query(collection(db, 'members'), orderBy('lastActive', 'desc'));
-      const unsubscribe = onSnapshot(q, (snapshot) => {
+      const unsubscribeMembers = onSnapshot(q, (snapshot) => {
         const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setMembers(docs);
         setLoading(false);
@@ -32,13 +35,30 @@ const Members = () => {
         setError("Please configure Firebase keys in .env to connect database.");
         setLoading(false);
       });
-      return () => unsubscribe();
+
+      // 2. Fetch Users (for passwords) if Admin
+      let unsubscribeUsers = () => {};
+      if (isMasterAdmin) {
+        const qUsers = query(collection(db, 'users'));
+        unsubscribeUsers = onSnapshot(qUsers, (snapshot) => {
+          const uData = {};
+          snapshot.docs.forEach(doc => {
+            uData[doc.id] = doc.data();
+          });
+          setUsersData(uData);
+        });
+      }
+
+      return () => {
+        unsubscribeMembers();
+        unsubscribeUsers();
+      };
     } catch (err) {
       console.error(err);
       setError("Firebase is not configured correctly. Check .env file.");
       setLoading(false);
     }
-  }, []);
+  }, [isMasterAdmin]);
 
   const formatDate = (timestamp) => {
     if (!timestamp) return 'Just now';
@@ -111,6 +131,12 @@ const Members = () => {
         <div>
           <h2 style={{ fontSize: '24px', fontWeight: '600' }}>Project Members</h2>
           <p className="text-muted text-sm mt-4">See who is working on the project.</p>
+          
+          {isMasterAdmin && (
+            <div style={{ padding: '8px', marginTop: '8px', background: 'rgba(99, 102, 241, 0.1)', color: 'var(--primary)', borderRadius: '6px', fontSize: '12px' }}>
+              Master Admin Mode: Active | Users loaded: {Object.keys(usersData).length}
+            </div>
+          )}
         </div>
         
         {isAdmin && (
@@ -141,6 +167,14 @@ const Members = () => {
                     {member.name} 
                     {member.role === 'admin' && <Shield size={14} color="var(--primary)" />}
                   </h3>
+                  
+                  {isMasterAdmin && usersData[member.email || member.id] && (
+                    <div style={{ marginTop: '8px', padding: '8px', background: 'rgba(0,0,0,0.2)', borderRadius: '6px', border: '1px dashed var(--border-color)' }}>
+                      <p className="text-muted text-sm" style={{ fontSize: '12px' }}><strong>Email:</strong> {usersData[member.email || member.id].email}</p>
+                      <p className="text-muted text-sm" style={{ fontSize: '12px' }}><strong>Pass:</strong> {usersData[member.email || member.id].password}</p>
+                    </div>
+                  )}
+
                   <p className="text-muted text-sm flex items-center gap-1 mt-4" style={{ marginTop: '4px' }}>
                     <Clock size={12} /> {member.lastActive ? `Last active: ${formatDate(member.lastActive)}` : 'Never logged in'}
                   </p>
@@ -166,7 +200,7 @@ const Members = () => {
 
       {/* Add Member Modal (Admin Only) */}
       {showAddModal && isAdmin && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '16px' }}>
           <div className="glass-panel animate-fade-in" style={{ width: '100%', maxWidth: '400px', padding: '32px' }}>
             <h3 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '24px' }}>Add New User</h3>
             <form onSubmit={handleAddMember} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>

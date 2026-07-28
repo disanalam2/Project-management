@@ -1,16 +1,66 @@
-# React + Vite
+# GDG Project Hub
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A modern, fast, and secure project management and communication tool designed for small teams (15-20 members). Built to replace scattered WhatsApp document sharing with a centralized, organized, and real-time platform.
 
-Currently, two official plugins are available:
+🌐 **Live Link:** [https://gdg-project-hub.web.app](https://gdg-project-hub.web.app)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Features
 
-## React Compiler
+- **Master Admin System:** A hidden master admin can login and manage the team.
+- **Role-Based Access Control:** Only admins can add or remove members. 
+- **Real-time Chat:** Team members can communicate instantly using the built-in global chat room.
+- **Document Management:** Save, search, and manage important project links and documents with descriptions.
+- **Member Activity Tracking:** See who is working on the project and their last active status.
+- **Premium Glassmorphism UI:** A beautiful, dark-themed, responsive user interface.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tech Stack
 
-## Expanding the Oxlint configuration
+- **Frontend:** React, Vite, CSS (Glassmorphism design system)
+- **Icons:** Lucide React
+- **Routing:** React Router DOM
+- **Database & Hosting:** Firebase (Firestore + Firebase Hosting)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+## Local Setup
+
+1. **Clone the repository:**
+   ```bash
+   git clone <your-repo-url>
+   cd project-management
+   ```
+
+2. **Install Dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Environment Variables:**
+   Create a `.env` file in the root directory and add your Firebase credentials and Master Admin details:
+   ```env
+   VITE_APP_USERNAME=admin
+   VITE_APP_PASSWORD=your_secure_password
+   
+   VITE_FIREBASE_API_KEY=your_api_key
+   VITE_FIREBASE_AUTH_DOMAIN=your_domain.firebaseapp.com
+   VITE_FIREBASE_PROJECT_ID=your_project_id
+   VITE_FIREBASE_STORAGE_BUCKET=your_storage_bucket
+   VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+   VITE_FIREBASE_APP_ID=your_app_id
+   ```
+
+4. **Run the Development Server:**
+   ```bash
+   npm run dev
+   ```
+
+## Deployment
+
+To deploy the latest changes to Firebase Hosting, run:
+
+```bash
+npm run build
+npx firebase deploy
+```
+
+## Security Note
+
+This app uses a custom login system tailored for a small private team. Firestore rules are set to `allow read, write: if true;` to accommodate this. Keep your Firebase Config private and do not share the live link with unauthorized personnel.

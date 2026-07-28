@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, deleteDoc } from 'firebase/firestore';
 import { db } from './firebase';
-import { Search, Plus, ExternalLink, Link as LinkIcon, FileText } from 'lucide-react';
+import { Search, Plus, ExternalLink, Link as LinkIcon, FileText, Trash2 } from 'lucide-react';
+import { useAuth } from './App';
 import './index.css';
 
 const Documents = () => {
+  const { user } = useAuth();
   const [documents, setDocuments] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -38,6 +40,27 @@ const Documents = () => {
     e.preventDefault();
     if (!newTitle || !newLink) return;
 
+    const sendPushNotification = async (docTitle) => {
+      try {
+        await fetch("https://onesignal.com/api/v1/notifications", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Basic ${import.meta.env.VITE_ONESIGNAL_REST_API_KEY}`
+          },
+          body: JSON.stringify({
+            app_id: import.meta.env.VITE_ONESIGNAL_APP_ID,
+            included_segments: ["Subscribed Users"],
+            headings: { en: "New Document Uploaded" },
+            contents: { en: `${user?.name || 'Someone'} added: ${docTitle}` },
+            url: window.location.origin + "/documents"
+          })
+        });
+      } catch (error) {
+        console.error("Failed to send push notification", error);
+      }
+    };
+
     try {
       await addDoc(collection(db, 'documents'), {
         title: newTitle,
@@ -45,6 +68,9 @@ const Documents = () => {
         url: newLink,
         createdAt: serverTimestamp()
       });
+      
+      // Fire push notification in background
+      sendPushNotification(newTitle);
       
       setNewTitle('');
       setNewDescription('');
@@ -96,25 +122,42 @@ const Documents = () => {
         {loading ? (
           <p className="text-muted">Loading documents...</p>
         ) : filteredDocs.length > 0 ? (
-          filteredDocs.map(doc => (
-            <div key={doc.id} className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column' }}>
+          filteredDocs.map(documentItem => (
+            <div key={documentItem.id} className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column' }}>
               <div className="flex items-center gap-4 mb-4">
                 <div style={{ padding: '12px', background: 'rgba(99, 102, 241, 0.1)', color: 'var(--primary)', borderRadius: '12px' }}>
                   <FileText size={24} />
                 </div>
                 <div>
-                  <h3 style={{ fontSize: '18px', fontWeight: '600' }}>{doc.title}</h3>
+                  <h3 style={{ fontSize: '18px', fontWeight: '600' }}>{documentItem.title}</h3>
                 </div>
               </div>
-              <p className="text-muted text-sm" style={{ flexGrow: 1, marginBottom: '24px' }}>{doc.description || 'No description provided.'}</p>
-              <a 
-                href={doc.url.startsWith('http') ? doc.url : `https://${doc.url}`} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px', fontWeight: '500' }}
-              >
-                Open Link <ExternalLink size={16} />
-              </a>
+              <p className="text-muted text-sm" style={{ flexGrow: 1, marginBottom: '24px' }}>{documentItem.description || 'No description provided.'}</p>
+              
+              <div className="flex gap-2">
+                <a 
+                  href={documentItem.url.startsWith('http') ? documentItem.url : `https://${documentItem.url}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px', fontWeight: '500' }}
+                >
+                  Open Link <ExternalLink size={16} />
+                </a>
+                
+                {user?.role === 'admin' && (
+                  <button 
+                    onClick={async () => {
+                      if(window.confirm('Delete this document?')) {
+                        await deleteDoc(doc(db, 'documents', documentItem.id)); 
+                      }
+                    }}
+                    style={{ padding: '0 16px', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)', borderRadius: '8px', border: '1px solid rgba(239,68,68,0.2)' }}
+                    title="Delete Document"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                )}
+              </div>
             </div>
           ))
         ) : (
@@ -124,7 +167,7 @@ const Documents = () => {
 
       {/* Add Modal */}
       {showAddModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '16px' }}>
           <div className="glass-panel animate-fade-in" style={{ width: '100%', maxWidth: '500px', padding: '32px' }}>
             <h3 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '24px' }}>Add New Document</h3>
             <form onSubmit={handleAddDocument} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>

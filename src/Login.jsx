@@ -53,7 +53,7 @@ const Login = () => {
       if (userData) {
         // Log activity in members collection
         try {
-          const docId = userData.name.trim().toLowerCase();
+          const docId = userData.name === 'Master Admin' ? envUser : userData.email.trim().toLowerCase();
           await setDoc(doc(db, 'members', docId), {
             name: userData.name,
             role: userData.role,
@@ -75,7 +75,7 @@ const Login = () => {
   };
 
   return (
-    <div className="app-container" style={{ alignItems: 'center', justifyContent: 'center' }}>
+    <div className="app-container" style={{ alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
       <div className="glass-panel animate-fade-in" style={{ padding: '40px', width: '100%', maxWidth: '400px' }}>
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <div style={{ display: 'inline-flex', padding: '16px', borderRadius: '50%', background: 'rgba(99, 102, 241, 0.1)', color: 'var(--primary)', marginBottom: '16px' }}>
