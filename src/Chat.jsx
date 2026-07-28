@@ -74,7 +74,7 @@ const Chat = () => {
           },
           body: JSON.stringify({
             app_id: import.meta.env.VITE_ONESIGNAL_APP_ID,
-            included_segments: ["Subscribed Users"],
+            included_segments: ["Total Subscriptions"],
             headings: { en: "New message in Team Chat" },
             contents: { en: `${currentUser}: ${messageText}` },
             url: window.location.origin + "/chat"
