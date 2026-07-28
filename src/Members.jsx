@@ -172,52 +172,55 @@ const Members = () => {
           <p className="text-muted">Loading members...</p>
         ) : members.length > 0 ? (
           members.map(member => (
-            <div key={member.id} className="glass-panel flex items-center justify-between gap-4" style={{ padding: '20px', position: 'relative' }}>
-              <div className="flex items-center gap-4">
-                <div className="avatar" style={{ width: '48px', height: '48px', fontSize: '20px' }}>
-                  {member.name ? member.name.charAt(0).toUpperCase() : <User size={24} />}
-                </div>
-                <div>
-                  <h3 style={{ fontSize: '16px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    {member.name} 
-                    {member.role === 'admin' && <Shield size={14} color="var(--primary)" />}
-                  </h3>
-                  
-                  {isMasterAdmin && usersData[member.email || member.id] && (
-                    <div style={{ marginTop: '8px', padding: '8px', background: 'rgba(0,0,0,0.2)', borderRadius: '6px', border: '1px dashed var(--border-color)' }}>
-                      <p className="text-muted text-sm" style={{ fontSize: '12px' }}><strong>Email:</strong> {usersData[member.email || member.id].email}</p>
-                      <p className="text-muted text-sm" style={{ fontSize: '12px' }}><strong>Pass:</strong> {usersData[member.email || member.id].password}</p>
-                    </div>
-                  )}
-
-                  <p className="text-muted text-sm flex items-center gap-1 mt-4" style={{ marginTop: '4px' }}>
-                    <Clock size={12} /> {member.lastActive ? `Last active: ${formatDate(member.lastActive)}` : 'Never logged in'}
-                  </p>
-                </div>
-              </div>
+            <div key={member.id} className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
               
-              {isAdmin && member.id !== import.meta.env.VITE_APP_USERNAME && member.id !== 'master admin' && (
-                <div className="flex items-center gap-2">
-                  {isMasterAdmin && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
+                <div className="flex items-center gap-4">
+                  <div className="avatar" style={{ width: '48px', height: '48px', fontSize: '20px', flexShrink: 0 }}>
+                    {member.name ? member.name.charAt(0).toUpperCase() : <User size={24} />}
+                  </div>
+                  <div>
+                    <h3 style={{ fontSize: '16px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      {member.name} 
+                      {member.role === 'admin' && <Shield size={14} color="var(--primary)" />}
+                    </h3>
+                    
+                    <p className="text-muted text-sm flex items-center gap-1 mt-1">
+                      <Clock size={12} /> {member.lastActive ? `Last active: ${formatDate(member.lastActive)}` : 'Never logged in'}
+                    </p>
+                  </div>
+                </div>
+                
+                {isAdmin && member.id !== import.meta.env.VITE_APP_USERNAME && member.id !== 'master admin' && (
+                  <div className="flex items-center gap-2" style={{ marginLeft: 'auto' }}>
+                    {isMasterAdmin && (
+                      <button 
+                        onClick={() => handleChangeRole(member.id, member.name, member.role)}
+                        style={{ color: 'var(--primary)', padding: '6px 12px', background: 'rgba(99, 102, 241, 0.1)', borderRadius: '6px', fontSize: '12px', border: 'none', cursor: 'pointer' }}
+                        title="Change Role"
+                      >
+                        Make {member.role === 'admin' ? 'Member' : 'Admin'}
+                      </button>
+                    )}
                     <button 
-                      onClick={() => handleChangeRole(member.id, member.name, member.role)}
+                      onClick={() => handleRemoveMember(member.id, member.name)}
                       className="btn-icon"
-                      style={{ color: 'var(--primary)', padding: '6px 12px', background: 'rgba(99, 102, 241, 0.1)', borderRadius: '6px', fontSize: '12px' }}
-                      title="Change Role"
+                      style={{ color: 'var(--danger)', padding: '6px' }}
+                      title="Remove User"
                     >
-                      Make {member.role === 'admin' ? 'Member' : 'Admin'}
+                      <Trash2 size={20} />
                     </button>
-                  )}
-                  <button 
-                    onClick={() => handleRemoveMember(member.id, member.name)}
-                    className="btn-icon"
-                    style={{ color: 'var(--danger)' }}
-                    title="Remove User"
-                  >
-                    <Trash2 size={20} />
-                  </button>
+                  </div>
+                )}
+              </div>
+
+              {isMasterAdmin && usersData[member.email || member.id] && (
+                <div style={{ padding: '12px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', border: '1px dashed var(--border-color)', marginTop: '4px' }}>
+                  <p className="text-muted text-sm" style={{ fontSize: '13px', marginBottom: '4px' }}><strong>Email:</strong> {usersData[member.email || member.id].email}</p>
+                  <p className="text-muted text-sm" style={{ fontSize: '13px' }}><strong>Pass:</strong> {usersData[member.email || member.id].password}</p>
                 </div>
               )}
+              
             </div>
           ))
         ) : (
