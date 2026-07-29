@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, deleteDoc, doc } from 'firebase/firestore';
 import { db } from './firebase';
-import { Send, User, Reply, X, Trash2, Hash } from 'lucide-react';
+import { Send, User, Reply, X, Trash2, Hash, FileText } from 'lucide-react';
 import { useAuth } from './App';
 import './index.css';
 
 const Chat = () => {
   const [messages, setMessages] = useState([]);
   const [members, setMembers] = useState([]);
+  const [documents, setDocuments] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [replyingTo, setReplyingTo] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -16,6 +17,10 @@ const Chat = () => {
   // Mentions state
   const [showMentions, setShowMentions] = useState(false);
   const [mentionQuery, setMentionQuery] = useState('');
+  
+  // Doc Mentions state
+  const [showDocMentions, setShowDocMentions] = useState(false);
+  const [docMentionQuery, setDocMentionQuery] = useState('');
   
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -53,10 +58,17 @@ const Chat = () => {
         const docs = snapshot.docs.map(doc => doc.data());
         setMembers(docs);
       });
+
+      const qDocs = query(collection(db, 'documents'), orderBy('createdAt', 'desc'));
+      const unsubscribeDocs = onSnapshot(qDocs, (snapshot) => {
+        const docsList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setDocuments(docsList);
+      });
       
       return () => {
         unsubscribe();
         unsubscribeMembers();
+        unsubscribeDocs();
       };
     } catch (err) {
       console.error(err);
@@ -82,9 +94,15 @@ const Chat = () => {
     
     if (currentWord.startsWith('@')) {
       setShowMentions(true);
+      setShowDocMentions(false);
       setMentionQuery(currentWord.slice(1).toLowerCase());
+    } else if (currentWord.startsWith('#')) {
+      setShowDocMentions(true);
+      setShowMentions(false);
+      setDocMentionQuery(currentWord.slice(1).toLowerCase());
     } else {
       setShowMentions(false);
+      setShowDocMentions(false);
     }
   };
 
@@ -103,6 +121,22 @@ const Chat = () => {
     inputRef.current.focus();
   };
 
+  const insertDocMention = (docTitle) => {
+    if (!inputRef.current) return;
+    const cursorPosition = inputRef.current.selectionStart;
+    const textBeforeCursor = newMessage.slice(0, cursorPosition);
+    const textAfterCursor = newMessage.slice(cursorPosition);
+    
+    const words = textBeforeCursor.split(/\s+/);
+    words.pop(); 
+    
+    const safeTitle = docTitle.replace(/\s+/g, '_');
+    const newTextBefore = words.join(' ') + (words.length > 0 ? ' ' : '') + `#${safeTitle} `;
+    setNewMessage(newTextBefore + textAfterCursor);
+    setShowDocMentions(false);
+    inputRef.current.focus();
+  };
+
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
@@ -113,6 +147,7 @@ const Chat = () => {
     setNewMessage('');
     setReplyingTo(null);
     setShowMentions(false);
+    setShowDocMentions(false);
     
     const sendPushNotification = async (messageText) => {
       try {
@@ -177,8 +212,23 @@ const Chat = () => {
   const renderMessageText = (text) => {
     const words = text.split(' ');
     return words.map((word, i) => {
-      if (word.startsWith('@')) {
+      if (word.startsWith('@') && word.length > 1) {
         return <span key={i} style={{ color: '#c7d2fe', fontWeight: 'bold' }}>{word} </span>;
+      } else if (word.startsWith('#') && word.length > 1) {
+        return (
+          <span key={i} style={{ 
+            color: '#10b981', 
+            fontWeight: '600', 
+            background: 'rgba(16, 185, 129, 0.15)', 
+            padding: '2px 6px', 
+            borderRadius: '6px', 
+            margin: '0 2px',
+            boxShadow: '0 2px 4px rgba(16, 185, 129, 0.1)',
+            cursor: 'pointer'
+          }} title="Document Reference">
+            {word}
+          </span>
+        );
       }
       return word + ' ';
     });
@@ -246,7 +296,6 @@ const Chat = () => {
                         <div className={`chat-message-bubble ${isMine ? 'chat-bubble-sent' : 'chat-bubble-received'}`} style={{ 
                           color: 'white', 
                           position: 'relative',
-                          paddingRight: '64px',
                           minWidth: '100px'
                         }}>
                           
@@ -361,6 +410,31 @@ const Chat = () => {
               )}
             </div>
           )}
+          
+          {/* Document Mentions Dropdown */}
+          {showDocMentions && (
+            <div className="mentions-dropdown animate-fade-in" style={{ width: '300px' }}>
+              <div style={{ padding: '6px 16px', fontSize: '12px', color: 'var(--primary)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Tag a Document
+              </div>
+              {documents.filter(d => d.title && d.title.toLowerCase().includes(docMentionQuery)).length > 0 ? (
+                documents.filter(d => d.title && d.title.toLowerCase().includes(docMentionQuery)).map(d => (
+                  <div 
+                    key={d.id}
+                    onClick={() => insertDocMention(d.title)}
+                    className="mention-item"
+                  >
+                    <div style={{ padding: '6px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '6px', color: '#10b981' }}>
+                      <FileText size={16} />
+                    </div>
+                    <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.title}</span>
+                  </div>
+                ))
+              ) : (
+                <div style={{ padding: '10px 16px', fontSize: '14px', color: 'var(--text-muted)' }}>No documents found</div>
+              )}
+            </div>
+          )}
 
           <form onSubmit={handleSendMessage} className="chat-input-pill">
             <input 
@@ -368,7 +442,7 @@ const Chat = () => {
               type="text" 
               value={newMessage}
               onChange={handleInputChange}
-              placeholder="Type your message... (Use @ to tag)"
+              placeholder="Type a message... (@ to mention, # to tag a document)"
             />
             <button type="submit" className="chat-send-btn" disabled={!newMessage.trim()}>
               <Send size={18} style={{ marginLeft: '2px' }} />
