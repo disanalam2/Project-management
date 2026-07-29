@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, deleteDoc, doc } from 'firebase/firestore';
 import { db } from './firebase';
-import { Send, User, Reply, X, Trash2 } from 'lucide-react';
+import { Send, User, Reply, X, Trash2, Hash } from 'lucide-react';
 import { useAuth } from './App';
 import './index.css';
 
@@ -75,7 +75,6 @@ const Chat = () => {
     const val = e.target.value;
     setNewMessage(val);
     
-    // Mention logic
     const cursorPosition = e.target.selectionStart;
     const textBeforeCursor = val.slice(0, cursorPosition);
     const words = textBeforeCursor.split(/\s+/);
@@ -96,7 +95,7 @@ const Chat = () => {
     const textAfterCursor = newMessage.slice(cursorPosition);
     
     const words = textBeforeCursor.split(/\s+/);
-    words.pop(); // remove the @query word
+    words.pop(); 
     
     const newTextBefore = words.join(' ') + (words.length > 0 ? ' ' : '') + `@${memberName} `;
     setNewMessage(newTextBefore + textAfterCursor);
@@ -111,8 +110,8 @@ const Chat = () => {
     const msgText = newMessage.trim();
     const replyData = replyingTo ? { sender: replyingTo.sender, text: replyingTo.text } : null;
     
-    setNewMessage(''); // optimistic clear
-    setReplyingTo(null); // clear reply state
+    setNewMessage('');
+    setReplyingTo(null);
     setShowMentions(false);
     
     const sendPushNotification = async (messageText) => {
@@ -144,19 +143,16 @@ const Chat = () => {
         createdAt: serverTimestamp()
       });
       scrollToBottom();
-      
-      // Fire push notification in background
       sendPushNotification(msgText);
       
     } catch (err) {
       console.error("Error sending message: ", err);
       alert("Failed to send message. Ensure Firebase is configured.");
-      setNewMessage(msgText); // restore if failed
+      setNewMessage(msgText);
       setReplyingTo(replyingTo);
     }
   };
 
-  // Group messages by date
   const groupedMessages = {};
   messages.forEach(msg => {
     const dateObj = msg.createdAt ? msg.createdAt.toDate() : new Date();
@@ -182,7 +178,7 @@ const Chat = () => {
     const words = text.split(' ');
     return words.map((word, i) => {
       if (word.startsWith('@')) {
-        return <span key={i} style={{ color: '#a5b4fc', fontWeight: 'bold' }}>{word} </span>;
+        return <span key={i} style={{ color: '#c7d2fe', fontWeight: 'bold' }}>{word} </span>;
       }
       return word + ' ';
     });
@@ -195,107 +191,124 @@ const Chat = () => {
 
   return (
     <div className="animate-fade-in flex" style={{ flexDirection: 'column', height: '100%' }}>
-      <div className="mb-4">
-        <h2 style={{ fontSize: '24px', fontWeight: '600' }}>Team Chat</h2>
-        <p className="text-muted text-sm mt-4">Communicate with your team here.</p>
+      
+      {/* Header */}
+      <div className="mb-6 flex justify-between items-center" style={{ padding: '0 8px' }}>
+        <div>
+          <h2 style={{ fontSize: '28px', fontWeight: '700', letterSpacing: '-0.5px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ padding: '8px', background: 'rgba(99, 102, 241, 0.1)', borderRadius: '12px' }}>
+              <Hash size={24} color="var(--primary)" />
+            </div>
+            Team Chat
+          </h2>
+          <p className="text-muted text-sm mt-2" style={{ marginLeft: '46px' }}>Real-time collaboration with your team.</p>
+        </div>
       </div>
 
       {error && (
-        <div style={{ background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)', padding: '16px', borderRadius: '8px', marginBottom: '24px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+        <div style={{ background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)', padding: '16px', borderRadius: '12px', marginBottom: '24px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
           {error}
         </div>
       )}
 
-      <div className="glass-panel flex" style={{ flexDirection: 'column', flexGrow: 1, overflow: 'hidden', padding: 0 }}>
+      {/* Main Chat Panel */}
+      <div className="glass-panel chat-container flex" style={{ flexDirection: 'column', flexGrow: 1, overflow: 'hidden', padding: 0, borderRadius: '24px', border: '1px solid rgba(255,255,255,0.08)' }}>
         
         {/* Chat History */}
-        <div style={{ flexGrow: 1, overflowY: 'auto', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ flexGrow: 1, overflowY: 'auto', padding: '32px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {loading ? (
-            <div className="text-muted text-center mt-4">Loading messages...</div>
+            <div className="text-muted text-center mt-8">Loading messages...</div>
           ) : messages.length > 0 ? (
             Object.keys(groupedMessages).map((date) => (
               <React.Fragment key={date}>
-                <div style={{ display: 'flex', justifyContent: 'center', margin: '16px 0' }}>
-                  <div style={{ background: 'rgba(255,255,255,0.1)', padding: '4px 12px', borderRadius: '16px', fontSize: '12px', color: 'var(--text-muted)' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', margin: '24px 0 8px' }}>
+                  <div className="chat-date-divider">
                     {date}
                   </div>
                 </div>
                 {groupedMessages[date].map((msg, index) => {
                   const isMine = msg.sender === currentUser;
                   return (
-                    <div key={msg.id || index} style={{ alignSelf: isMine ? 'flex-end' : 'flex-start', maxWidth: '85%', display: 'flex', flexDirection: 'column', alignItems: isMine ? 'flex-end' : 'flex-start' }}>
+                    <div key={msg.id || index} className="animate-fade-in" style={{ alignSelf: isMine ? 'flex-end' : 'flex-start', maxWidth: '80%', display: 'flex', flexDirection: 'column', alignItems: isMine ? 'flex-end' : 'flex-start' }}>
                       
                       {!isMine && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                          <div className="avatar" style={{ width: '24px', height: '24px', fontSize: '10px' }}>
-                            <User size={12} />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px', marginLeft: '4px' }}>
+                          <div className="avatar" style={{ width: '28px', height: '28px', fontSize: '11px', boxShadow: '0 2px 10px rgba(0,0,0,0.2)' }}>
+                            {msg.sender.charAt(0).toUpperCase()}
                           </div>
-                          <span className="text-muted text-sm">{msg.sender}</span>
+                          <span className="text-muted" style={{ fontSize: '13px', fontWeight: '500' }}>{msg.sender}</span>
                         </div>
                       )}
 
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexDirection: isMine ? 'row-reverse' : 'row' }}>
                         
-                        <div className="chat-message-bubble" style={{ 
-                          background: isMine ? 'var(--primary)' : 'rgba(255,255,255,0.08)', 
-                          borderRadius: isMine ? '16px 16px 0 16px' : '0 16px 16px 16px', 
+                        {/* Bubble */}
+                        <div className={`chat-message-bubble ${isMine ? 'chat-bubble-sent' : 'chat-bubble-received'}`} style={{ 
                           color: 'white', 
                           position: 'relative',
-                          boxShadow: isMine ? '0 4px 14px rgba(99, 102, 241, 0.2)' : 'none',
-                          paddingRight: '48px', // Make room for timestamp
-                          minWidth: '80px'
+                          paddingRight: '64px',
+                          minWidth: '100px'
                         }}>
                           
+                          {/* Reply Context */}
                           {msg.replyTo && (
                             <div style={{ 
-                              background: 'rgba(0,0,0,0.2)', 
-                              padding: '8px', 
-                              borderRadius: '6px', 
-                              borderLeft: '3px solid rgba(255,255,255,0.5)', 
-                              marginBottom: '8px',
+                              background: 'rgba(0,0,0,0.25)', 
+                              padding: '10px 12px', 
+                              borderRadius: '8px', 
+                              borderLeft: '4px solid rgba(255,255,255,0.7)', 
+                              marginBottom: '10px',
                               fontSize: '13px',
-                              opacity: 0.9
+                              opacity: 0.95
                             }}>
-                              <strong style={{ display: 'block', fontSize: '11px', marginBottom: '2px', opacity: 0.8 }}>{msg.replyTo.sender}</strong>
-                              {msg.replyTo.text.length > 50 ? msg.replyTo.text.substring(0, 50) + '...' : msg.replyTo.text}
+                              <strong style={{ display: 'block', fontSize: '11px', marginBottom: '4px', opacity: 0.8, color: isMine ? '#c7d2fe' : 'var(--primary)' }}>
+                                Replying to {msg.replyTo.sender}
+                              </strong>
+                              {msg.replyTo.text.length > 60 ? msg.replyTo.text.substring(0, 60) + '...' : msg.replyTo.text}
                             </div>
                           )}
                           
-                          {renderMessageText(msg.text)}
+                          {/* Text */}
+                          <div style={{ wordBreak: 'break-word' }}>
+                            {renderMessageText(msg.text)}
+                          </div>
 
+                          {/* Time */}
                           <span style={{
                             position: 'absolute',
-                            bottom: '4px',
-                            right: '8px',
+                            bottom: '8px',
+                            right: '12px',
                             fontSize: '10px',
                             opacity: 0.7,
-                            whiteSpace: 'nowrap'
+                            whiteSpace: 'nowrap',
+                            fontWeight: '500'
                           }}>
                             {formatTime(msg.createdAt)}
                           </span>
                         </div>
 
-                        {/* Reply Button */}
-                        <button 
-                          onClick={() => setReplyingTo(msg)}
-                          className="btn-icon"
-                          style={{ padding: '6px', opacity: 0.7 }}
-                          title="Reply"
-                        >
-                          <Reply size={16} />
-                        </button>
-
-                        {/* Master Admin Delete Button */}
-                        {isMasterAdmin && (
+                        {/* Actions */}
+                        <div style={{ display: 'flex', gap: '4px', opacity: 0.6, transition: 'opacity 0.2s' }} className="hover:opacity-100">
                           <button 
-                            onClick={() => handleDeleteMessage(msg.id)}
+                            onClick={() => setReplyingTo(msg)}
                             className="btn-icon"
-                            style={{ padding: '6px', opacity: 0.7, color: 'var(--danger)' }}
-                            title="Delete Message"
+                            style={{ padding: '6px' }}
+                            title="Reply"
                           >
-                            <Trash2 size={16} />
+                            <Reply size={16} />
                           </button>
-                        )}
+
+                          {isMasterAdmin && (
+                            <button 
+                              onClick={() => handleDeleteMessage(msg.id)}
+                              className="btn-icon"
+                              style={{ padding: '6px', color: 'var(--danger)' }}
+                              title="Delete Message"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          )}
+                        </div>
                         
                       </div>
                     </div>
@@ -304,75 +317,61 @@ const Chat = () => {
               </React.Fragment>
             ))
           ) : (
-            !error && <div className="text-muted text-center mt-4">No messages yet. Start the conversation!</div>
+            !error && <div className="text-muted text-center mt-8">No messages yet. Start the conversation!</div>
           )}
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Reply Indicator */}
+        {/* Reply Indicator (Above Input) */}
         {replyingTo && (
-          <div style={{ padding: '12px 24px', background: 'rgba(99, 102, 241, 0.1)', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="reply-indicator-pill animate-fade-in">
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span style={{ fontSize: '12px', color: 'var(--primary)', fontWeight: '600' }}>Replying to {replyingTo.sender}</span>
-              <span style={{ fontSize: '13px', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '300px' }}>
+              <span style={{ fontSize: '12px', color: 'var(--primary)', fontWeight: '600', marginBottom: '2px' }}>Replying to {replyingTo.sender}</span>
+              <span style={{ fontSize: '14px', color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '400px' }}>
                 {replyingTo.text}
               </span>
             </div>
             <button onClick={() => setReplyingTo(null)} className="btn-icon" style={{ color: 'var(--text-muted)' }}>
-              <X size={18} />
+              <X size={20} />
             </button>
           </div>
         )}
 
-        {/* Message Input Container */}
-        <div style={{ position: 'relative' }}>
+        {/* Floating Input Area */}
+        <div className="chat-floating-input-container">
+          
           {/* Mentions Dropdown */}
           {showMentions && (
-            <div style={{
-              position: 'absolute', 
-              bottom: '100%', 
-              left: '24px', 
-              background: 'var(--panel-bg, rgba(20,20,30,0.95))', 
-              border: '1px solid rgba(255,255,255,0.1)', 
-              borderRadius: '8px',
-              width: '250px',
-              maxHeight: '150px',
-              overflowY: 'auto',
-              marginBottom: '8px',
-              zIndex: 10,
-              boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
-              backdropFilter: 'blur(10px)'
-            }}>
+            <div className="mentions-dropdown animate-fade-in">
               {members.filter(m => m.name && m.name.toLowerCase().includes(mentionQuery)).length > 0 ? (
                 members.filter(m => m.name && m.name.toLowerCase().includes(mentionQuery)).map(m => (
                   <div 
                     key={m.email || m.name}
                     onClick={() => insertMention(m.name)}
-                    style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', fontSize: '14px' }}
-                    className="hover:bg-white/10"
-                    onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-                    onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+                    className="mention-item"
                   >
+                    <div className="avatar" style={{ width: '24px', height: '24px', fontSize: '10px' }}>
+                      {m.name.charAt(0).toUpperCase()}
+                    </div>
                     {m.name}
                   </div>
                 ))
               ) : (
-                <div style={{ padding: '10px 14px', fontSize: '14px', color: 'var(--text-muted)' }}>No members found</div>
+                <div style={{ padding: '10px 16px', fontSize: '14px', color: 'var(--text-muted)' }}>No members found</div>
               )}
             </div>
           )}
 
-          <form onSubmit={handleSendMessage} className="chat-input-area" style={{ margin: 0, borderTop: '1px solid var(--border-color)' }}>
+          <form onSubmit={handleSendMessage} className="chat-input-pill">
             <input 
               ref={inputRef}
               type="text" 
               value={newMessage}
               onChange={handleInputChange}
-              placeholder="Type a message... (Use @ to tag)"
-              style={{ flexGrow: 1, background: 'rgba(255,255,255,0.05)', border: 'none' }}
+              placeholder="Type your message... (Use @ to tag)"
             />
-            <button type="submit" className="btn-primary flex items-center justify-center gap-2" style={{ padding: '10px 20px', borderRadius: '8px' }}>
-              <Send size={18} />
+            <button type="submit" className="chat-send-btn" disabled={!newMessage.trim()}>
+              <Send size={18} style={{ marginLeft: '2px' }} />
             </button>
           </form>
         </div>
