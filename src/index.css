@@ -830,7 +830,7 @@ input:focus, textarea:focus {
 .reply-title {
   font-size: 12px;
   color: #34d399;
-  fontWeight: 600;
+  font-weight: 600;
 }
 
 .reply-text {
@@ -863,4 +863,41 @@ input:focus, textarea:focus {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+@media (max-width: 640px) {
+  .chat-bubble-wrapper {
+    max-width: 96%;
+  }
+  .whatsapp-history {
+    padding: 12px 8px;
+  }
+}
+
+@keyframes highlightFlash {
+  0% { filter: brightness(1.5) drop-shadow(0 0 10px rgba(255,255,255,0.5)); transform: scale(1.02); }
+  100% { filter: brightness(1) drop-shadow(0 0 0 transparent); transform: scale(1); }
+}
+
+.highlight-message {
+  animation: highlightFlash 2s ease-out forwards;
+}
+
+@keyframes pulse {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+.custom-audio {
+  height: 36px;
+  border-radius: 20px;
+  outline: none;
+}
+.custom-audio::-webkit-media-controls-panel {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+.custom-audio::-webkit-media-controls-current-time-display,
+.custom-audio::-webkit-media-controls-time-remaining-display {
+  color: #f8fafc;
 }

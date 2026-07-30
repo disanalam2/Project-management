@@ -8,7 +8,8 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {
-        importScripts: ['https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js']
+        importScripts: ['https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js'],
+        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024 // 10MB
       },
       devOptions: {
         enabled: true

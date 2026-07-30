@@ -63,6 +63,17 @@ function App() {
         
         isOneSignalInitialized = true;
         
+        // Sync tags for logged-in user on load
+        const savedUser = localStorage.getItem('user');
+        if (savedUser) {
+           const parsedUser = JSON.parse(savedUser);
+           const userName = parsedUser.name.replace(/\s+/g, '_');
+           const userRole = (parsedUser.designation || parsedUser.role || 'member').replace(/\s+/g, '_');
+           OneSignal.login(userName).catch(e => {});
+           OneSignal.User.addTag("name", userName);
+           OneSignal.User.addTag("role", userRole);
+        }
+        
         // Force the prompt to show on every refresh ONLY if they haven't allowed yet
         if (window.Notification && Notification.permission !== 'granted') {
           OneSignal.Slidedown.promptPush({ force: true });
@@ -95,11 +106,21 @@ function App() {
   const setAuthUser = (userData) => {
     setUser(userData);
     localStorage.setItem('user', JSON.stringify(userData));
+    if (isOneSignalInitialized) {
+       const userName = userData.name.replace(/\s+/g, '_');
+       const userRole = (userData.designation || userData.role || 'member').replace(/\s+/g, '_');
+       OneSignal.login(userName).catch(e => {});
+       OneSignal.User.addTag("name", userName);
+       OneSignal.User.addTag("role", userRole);
+    }
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
+    if (isOneSignalInitialized) {
+       OneSignal.logout().catch(e => {});
+    }
   };
 
   return (
