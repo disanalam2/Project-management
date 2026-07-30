@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from './App';
+import { useAuth } from '../App';
 import { Lock, User, ArrowRight } from 'lucide-react';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from './firebase';
-import './index.css';
+import { db } from '../firebase';
+import '../index.css';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -28,11 +28,9 @@ const Login = () => {
     let userData = null;
 
     try {
-      // 1. Check Master Admin from .env
       if (email === envUser && password === envPass) {
         userData = { name: 'Master Admin', email: envUser, role: 'admin' };
       } 
-      // 2. Check Firestore Database
       else {
         const cleanEmail = email.trim().toLowerCase();
         const userDocRef = doc(db, 'users', cleanEmail);
@@ -51,7 +49,6 @@ const Login = () => {
       }
 
       if (userData) {
-        // Log activity in members collection
         try {
           const docId = userData.name === 'Master Admin' ? envUser : userData.email.trim().toLowerCase();
           await setDoc(doc(db, 'members', docId), {

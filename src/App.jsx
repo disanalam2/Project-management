@@ -1,11 +1,11 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import OneSignal from 'react-onesignal';
-import Login from './Login';
-import Dashboard from './Dashboard';
-import Documents from './Documents';
-import Chat from './Chat';
-import Members from './Members';
+import Login from './components/Login';
+import Dashboard from './components/Dashboard';
+import Documents from './components/Documents';
+import Chat from './components/Chat';
+import Members from './components/Members';
 
 // Create Auth Context
 export const AuthContext = createContext();

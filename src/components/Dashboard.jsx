@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { useAuth } from './App';
+import { useAuth } from '../App';
 import { LayoutDashboard, FileText, MessageSquare, LogOut, Users, Shield, Menu, X, Download } from 'lucide-react';
-import './index.css';
+import '../index.css';
 
 const Dashboard = () => {
   const { logout, user } = useAuth();
@@ -164,6 +164,9 @@ const Dashboard = () => {
             <span className="text-muted flex items-center gap-2">
               {userName}
               {user?.role === 'admin' && <Shield size={14} color="var(--primary)" />}
+              <span style={{ fontSize: '11px', background: 'rgba(255, 255, 255, 0.08)', padding: '2px 8px', borderRadius: '4px', color: 'var(--text-main)', fontWeight: '500' }}>
+                {user?.designation || (user?.role === 'admin' ? 'Project Lead' : 'Full Stack Developer')}
+              </span>
             </span>
             <div className="avatar">{initial}</div>
           </div>
@@ -172,6 +175,31 @@ const Dashboard = () => {
         <div className="content-area">
           <Outlet />
         </div>
+
+        {/* Mobile Bottom Navigation Bar */}
+        <nav className="mobile-bottom-nav">
+          <NavLink 
+            to="/documents" 
+            className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}
+          >
+            <FileText size={20} />
+            <span>Documents</span>
+          </NavLink>
+          <NavLink 
+            to="/chat" 
+            className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}
+          >
+            <MessageSquare size={20} />
+            <span>Chat</span>
+          </NavLink>
+          <NavLink 
+            to="/members" 
+            className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}
+          >
+            <Users size={20} />
+            <span>Members</span>
+          </NavLink>
+        </nav>
       </main>
     </div>
   );
