@@ -415,6 +415,7 @@ input:focus, textarea:focus {
   background: rgba(0,0,0,0.2);
 }
 
+<<<<<<< HEAD
 /* Modal System Styles */
 .modal-backdrop {
   position: fixed;
@@ -854,5 +855,3 @@ input:focus, textarea:focus {
   align-items: center;
   justify-content: center;
 }
-
-

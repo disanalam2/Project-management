@@ -29,6 +29,8 @@ function App() {
         await OneSignal.init({
           appId: import.meta.env.VITE_ONESIGNAL_APP_ID,
           allowLocalhostAsSecureOrigin: true,
+          serviceWorkerParam: { scope: '/' },
+          serviceWorkerPath: 'sw.js',
           notifyButton: {
             enable: true,
             text: {
