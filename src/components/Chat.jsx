@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, deleteDoc, doc, updateDoc, arrayUnion, writeBatch } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../firebase';
 import { Send, User, Reply, X, Trash2, Check, CheckCheck, MoreVertical, Eye, Copy, Edit2, Smile, Users, Mic, Square, Video } from 'lucide-react';
@@ -40,7 +40,7 @@ const Chat = () => {
   const [activeCallParticipants, setActiveCallParticipants] = useState([]);
 
   const currentUser = user?.name || 'Guest';
-  const currentUserId = user?.email || user?.id || currentUser;
+  const currentUserId = user?.email ? user.email.toLowerCase().trim() : (user?.id || currentUser);
   const currentUserDesignation = user?.designation || (user?.name === 'Master Admin' ? 'Project Lead' : 'Full Stack Developer');
   const isMasterAdmin = user?.role === 'admin' && user?.name === 'Master Admin';
 
@@ -65,7 +65,19 @@ const Chat = () => {
           let defaultDes = 'Full Stack Developer';
           if (data.name === 'Master Admin') defaultDes = 'Project Lead';
           map[data.name] = data.designation || defaultDes;
+          
+          // Map by document ID
           idMap[docSnap.id] = data.name;
+          idMap[docSnap.id.toLowerCase()] = data.name;
+          
+          // Map by email if exists
+          if (data.email) {
+            idMap[data.email] = data.name;
+            idMap[data.email.toLowerCase()] = data.name;
+          }
+          
+          // Map by name just in case the name itself was saved as ID
+          idMap[data.name] = data.name;
         }
       });
       setMembersMap(map);
@@ -83,18 +95,32 @@ const Chat = () => {
     try {
       const q = query(collection(db, 'chats'), orderBy('createdAt', 'asc'));
       const unsubscribe = onSnapshot(q, (snapshot) => {
+        const batch = writeBatch(db);
+        let hasUpdates = false;
+        let updateCount = 0;
+
         const msgs = snapshot.docs.map(docSnapshot => {
           const data = docSnapshot.data();
           if (data.sender !== currentUser) {
             const seenBy = data.seenBy || [];
             if (!seenBy.includes(currentUserId)) {
-              updateDoc(doc(db, 'chats', docSnapshot.id), {
-                seenBy: [...seenBy, currentUserId]
-              }).catch(() => {});
+              if (updateCount < 500) { // Firestore batch size limit
+                batch.update(doc(db, 'chats', docSnapshot.id), {
+                  seenBy: arrayUnion(currentUserId)
+                });
+                hasUpdates = true;
+                updateCount++;
+                // Optimistically update local state to avoid refetch loops
+                data.seenBy = [...seenBy, currentUserId];
+              }
             }
           }
           return { id: docSnapshot.id, ...data };
         });
+
+        if (hasUpdates) {
+          batch.commit().catch(err => console.error("Batch update failed:", err));
+        }
 
         setMessages(msgs);
         setLoading(false);
@@ -486,6 +512,36 @@ const Chat = () => {
     }
   };
 
+  const handleJoinCall = async () => {
+    setIsVideoCallOpen(true);
+    
+    // Only send notification if you are starting a new call (no one else is in it)
+    if (activeCallParticipants.length === 0) {
+      try {
+        const currentUserName = currentUser.replace(/\s+/g, '_');
+        
+        const payload = {
+          app_id: import.meta.env.VITE_ONESIGNAL_APP_ID,
+          url: window.location.origin + "/chat",
+          headings: { en: "Team Meeting Started! 🎥" },
+          contents: { en: `${currentUser} has just started a video meeting. Click to join now!` },
+          filters: [{ field: "tag", key: "name", relation: "!=", value: currentUserName }]
+        };
+
+        await fetch("https://onesignal.com/api/v1/notifications", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Basic ${import.meta.env.VITE_ONESIGNAL_REST_API_KEY}`
+          },
+          body: JSON.stringify(payload)
+        });
+      } catch (error) {
+        console.error("Failed to send meeting started push notification", error);
+      }
+    }
+  };
+
   return (
     <div className="animate-fade-in flex" style={{ flexDirection: 'column', height: '100%' }}>
       {error && (
@@ -510,7 +566,7 @@ const Chat = () => {
           </div>
           <div>
             <button 
-              onClick={() => setIsVideoCallOpen(true)}
+              onClick={handleJoinCall}
               style={{ background: 'rgba(16, 185, 129, 0.2)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.4)', display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s' }}
               onMouseOver={(e) => e.currentTarget.style.background = 'rgba(16, 185, 129, 0.3)'}
               onMouseOut={(e) => e.currentTarget.style.background = 'rgba(16, 185, 129, 0.2)'}
@@ -546,7 +602,9 @@ const Chat = () => {
                 lastDateGroup = currentDateGroup;
                 
                 const isMine = msg.sender === currentUser;
-                const seenByOther = (msg.seenBy || []).some(id => id !== currentUserId && id !== msg.senderId);
+                const uniqueViewers = new Set((msg.seenBy || []).filter(id => id !== msg.senderId && id !== msg.sender));
+                const totalMembers = Object.keys(membersMap).length;
+                const hasEveryoneSeen = totalMembers > 1 && uniqueViewers.size >= (totalMembers - 1);
                 const userRole = membersMap[msg.sender] || msg.senderDesignation || (msg.sender === 'Master Admin' ? 'Project Lead' : 'Full Stack Developer');
                 
                 return (
@@ -629,7 +687,7 @@ const Chat = () => {
                               
                               {isMine && (
                                 <span className="ticks-span">
-                                  {seenByOther ? (
+                                  {hasEveryoneSeen ? (
                                     <CheckCheck size={15} color="#38bdf8" />
                                   ) : msg.createdAt ? (
                                     <CheckCheck size={15} color="rgba(255, 255, 255, 0.7)" />
@@ -775,13 +833,16 @@ const Chat = () => {
                               <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#f8fafc' }}>Seen By</span>
                             </div>
                             <div style={{ maxHeight: '120px', overflowY: 'auto' }}>
-                              {(msg.seenBy || []).filter(id => id !== msg.senderId && idToNameMap[id]).length > 0 ? (
-                                (msg.seenBy || []).filter(id => id !== msg.senderId && idToNameMap[id]).map((viewerId, idx) => (
-                                  <div key={idx} style={{ fontSize: '12px', color: '#cbd5e1', padding: '4px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                    <User size={12} />
-                                    {idToNameMap[viewerId]}
-                                  </div>
-                                ))
+                              {(msg.seenBy || []).filter(id => id !== msg.senderId && id !== msg.sender).length > 0 ? (
+                                (msg.seenBy || []).filter(id => id !== msg.senderId && id !== msg.sender).map((viewerId, idx) => {
+                                  const displayName = idToNameMap[viewerId] || idToNameMap[viewerId.toLowerCase()] || viewerId;
+                                  return (
+                                    <div key={idx} style={{ fontSize: '12px', color: '#cbd5e1', padding: '4px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                      <User size={12} />
+                                      {displayName}
+                                    </div>
+                                  );
+                                })
                               ) : (
                                 <div style={{ fontSize: '11px', color: '#64748b', fontStyle: 'italic' }}>No one yet</div>
                               )}
@@ -909,7 +970,7 @@ const Chat = () => {
           <VideoCall 
             roomName="main_room" 
             user={{ name: currentUser }} 
-            onLeave={() => setIsVideoCallOpen(false)} 
+            onClose={() => setIsVideoCallOpen(false)} 
           />
         )}
       </div>
