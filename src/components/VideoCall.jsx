@@ -4,29 +4,30 @@ import { doc, setDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { db } from '../firebase';
 
 const VideoCall = ({ roomName, user, onClose }) => {
+  const containerRef = useRef(null);
   const zpRef = useRef(null);
-  const initialized = useRef(false);
-  const userID = useRef(`user_${Date.now()}`).current;
   const userName = user?.name || 'Guest';
+  
+  // Store latest onClose in a ref so we don't need it in useEffect dependencies
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
-  const myMeeting = async (element) => {
-    if (!element || initialized.current) return;
-    initialized.current = true;
+  useEffect(() => {
+    if (!containerRef.current) return;
 
     const appID = Number(import.meta.env.VITE_ZEGO_APP_ID);
     const serverSecret = import.meta.env.VITE_ZEGO_SERVER_SECRET;
     
     if (!appID || !serverSecret) {
       alert("ZegoCloud keys are missing! Please add VITE_ZEGO_APP_ID and VITE_ZEGO_SERVER_SECRET to your .env file.");
-      onClose();
+      onCloseRef.current();
       return;
     }
 
-    // Add to Firebase active call
-    const callDocRef = doc(db, 'active_calls', roomName);
-    setDoc(callDocRef, { participants: arrayUnion(userName) }, { merge: true }).catch(() => {});
-
-    // Generate ZegoCloud token
+    // Generate ZegoCloud token with a unique ID for this session
+    const userID = `user_${Date.now()}`;
     const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(
       appID, 
       serverSecret, 
@@ -37,9 +38,13 @@ const VideoCall = ({ roomName, user, onClose }) => {
     
     const zp = ZegoUIKitPrebuilt.create(kitToken);
     zpRef.current = zp;
+
+    // Add to Firebase active call
+    const callDocRef = doc(db, 'active_calls', roomName);
+    setDoc(callDocRef, { participants: arrayUnion(userName) }, { merge: true }).catch(() => {});
     
     zp.joinRoom({
-      container: element,
+      container: containerRef.current,
       scenario: {
         mode: ZegoUIKitPrebuilt.VideoConference, 
       },
@@ -54,15 +59,12 @@ const VideoCall = ({ roomName, user, onClose }) => {
       onLeaveRoom: () => {
         // Remove from Firebase when leaving the room explicitly
         setDoc(callDocRef, { participants: arrayRemove(userName) }, { merge: true }).catch(() => {});
-        onClose();
+        onCloseRef.current();
       }
     });
-  };
 
-  useEffect(() => {
     return () => {
       // Remove from Firebase if component unmounts unexpectedly
-      const callDocRef = doc(db, 'active_calls', roomName);
       setDoc(callDocRef, { participants: arrayRemove(userName) }, { merge: true }).catch(() => {});
       if (zpRef.current) {
         try {
@@ -72,11 +74,11 @@ const VideoCall = ({ roomName, user, onClose }) => {
         }
       }
     };
-  }, [roomName, userName]);
+  }, [roomName, userName]); // Omitting onCloseRef to prevent re-initialization loops
 
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999, background: '#1c1f2e' }}>
-      <div style={{ width: '100%', height: '100%' }} ref={myMeeting}></div>
+      <div style={{ width: '100%', height: '100%' }} ref={containerRef}></div>
     </div>
   );
 };
