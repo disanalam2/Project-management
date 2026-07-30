@@ -425,8 +425,6 @@ input:focus, textarea:focus {
   gap: 12px;
   background: rgba(0,0,0,0.2);
 }
-
-<<<<<<< HEAD
 /* Modal System Styles */
 .modal-backdrop {
   position: fixed;
