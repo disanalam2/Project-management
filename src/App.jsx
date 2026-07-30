@@ -22,9 +22,13 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
+let isOneSignalInitialized = false;
+
 function App() {
   useEffect(() => {
     const initOneSignal = async () => {
+      if (isOneSignalInitialized) return;
+      
       try {
         await OneSignal.init({
           appId: import.meta.env.VITE_ONESIGNAL_APP_ID,
@@ -57,13 +61,21 @@ function App() {
           }
         });
         
+        isOneSignalInitialized = true;
+        
         // Force the prompt to show on every refresh ONLY if they haven't allowed yet
         if (window.Notification && Notification.permission !== 'granted') {
           OneSignal.Slidedown.promptPush({ force: true });
         }
         
       } catch (error) {
-        console.error("OneSignal initialization failed", error);
+        if (error.message && error.message.includes("SDK already initialized")) {
+          isOneSignalInitialized = true;
+        } else if (error.message && error.message.includes("Can only be used on")) {
+          console.warn("OneSignal notifications are disabled on localhost because your OneSignal dashboard is locked to https://gdg-project-hub.web.app");
+        } else {
+          console.error("OneSignal initialization failed", error);
+        }
       }
     };
     initOneSignal();

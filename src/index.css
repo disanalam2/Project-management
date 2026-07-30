@@ -346,9 +346,20 @@ input:focus, textarea:focus {
     padding: 12px 16px !important;
   }
   
+  .chat-floating-input-container {
+    padding: 12px 16px !important;
+  }
+  
   .chat-message-bubble {
     font-size: 14px !important;
     padding: 10px 14px !important;
+    padding-right: 54px !important; /* Keep space for time */
+  }
+
+  .mentions-dropdown {
+    width: calc(100vw - 32px) !important;
+    left: 16px !important;
+    max-width: none !important;
   }
 
   .content-area {
