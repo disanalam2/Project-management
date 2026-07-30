@@ -65,7 +65,7 @@ const Login = () => {
       }
     } catch (err) {
       console.error(err);
-      setError('An error occurred during login. Check connection.');
+      setError('An error occurred during login. Check connection. Ensure you are connected to the internet.');
     } finally {
       setIsLoading(false);
     }
