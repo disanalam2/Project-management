@@ -145,7 +145,7 @@ const Chat = () => {
 
   useEffect(() => {
     // Listen to active video calls
-    const unsubscribeCall = onSnapshot(doc(db, 'active_calls', 'main_room'), (docSnap) => {
+    const unsubscribeCall = onSnapshot(doc(db, 'active_calls', 'gdg_project_hub_private_room_1'), (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
         setActiveCallParticipants(data.participants || []);
@@ -264,6 +264,7 @@ const Chat = () => {
     setReplyingTo(null);
     
     const sendPushNotification = async (messageText) => {
+      if (isMasterAdmin) return;
       try {
         const currentUserName = currentUser.replace(/\s+/g, '_');
         const mentions = messageText.match(/@([a-zA-Z0-9_]+)/g);
@@ -516,7 +517,7 @@ const Chat = () => {
     setIsVideoCallOpen(true);
     
     // Only send notification if you are starting a new call (no one else is in it)
-    if (activeCallParticipants.length === 0) {
+    if (activeCallParticipants.length === 0 && !isMasterAdmin) {
       try {
         const currentUserName = currentUser.replace(/\s+/g, '_');
         
@@ -564,7 +565,22 @@ const Chat = () => {
 
             </div>
           </div>
-          <div>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {user?.role === 'admin' && activeCallParticipants.length > 0 && (
+              <button 
+                onClick={async () => {
+                  if(window.confirm('Clear the active meeting state? Use this if the meeting gets stuck.')) {
+                    try {
+                      await updateDoc(doc(db, 'active_calls', 'gdg_project_hub_private_room_1'), { participants: [] });
+                      setIsVideoCallOpen(false);
+                    } catch(e) {}
+                  }
+                }}
+                style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.4)', display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s' }}
+              >
+                End Meeting
+              </button>
+            )}
             <button 
               onClick={handleJoinCall}
               style={{ background: 'rgba(16, 185, 129, 0.2)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.4)', display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s' }}
@@ -968,7 +984,7 @@ const Chat = () => {
 
         {isVideoCallOpen && (
           <VideoCall 
-            roomName="main_room" 
+            roomName="gdg_project_hub_private_room_1" 
             user={{ name: currentUser }} 
             onClose={() => setIsVideoCallOpen(false)} 
           />

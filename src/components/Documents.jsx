@@ -41,6 +41,8 @@ const Documents = () => {
     if (!newTitle || !newLink) return;
 
     const sendPushNotification = async (docTitle) => {
+      const isMasterAdmin = user?.role === 'admin' && user?.name === 'Master Admin';
+      if (isMasterAdmin) return;
       try {
         await fetch("https://onesignal.com/api/v1/notifications", {
           method: "POST",
