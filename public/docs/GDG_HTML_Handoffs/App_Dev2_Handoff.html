@@ -1,0 +1,172 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Dev2 Handoff</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background: #f9fbfd; }
+        .container { background: #fff; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1, h2, h3 { color: #2c3e50; }
+        h1 { border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        pre { background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto; font-family: 'Courier New', Courier, monospace; }
+        code { background: #ecf0f1; color: #c0392b; padding: 2px 5px; border-radius: 3px; }
+        pre code { background: transparent; color: inherit; padding: 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background: #f4f7f6; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Technical Specification &amp; Handoff: App Developer 2 (Tasks &amp; Forms)</h1>
+<p><strong>Developer Profile:</strong> App Dev 2<br><strong>Working Directory:</strong> <code>app/lib/features/dev2_tasks_forms/</code><br><strong>Core Responsibilities:</strong> Core Task Management &amp; Calendar, Dynamic Mobile Form Building/Filling, and Notification Center UI.
+<strong>Tech Stack:</strong> Flutter (Dart), Provider/Riverpod (State Management), Dio (API Client).</p>
+<p><strong>Objective:</strong> 
+This document provides the complete UI architecture, state management logic, widget breakdown, and API integration contracts required to build your module for iOS and Android. You are responsible for writing the actual implementation code. All edge cases and structures are defined below so you can work entirely independently without needing to consult the rest of the team.</p>
+<hr>
+<h2>1. Zero-Conflict Architecture (Strict Rules)</h2>
+<p>To ensure your code never conflicts with the 3 other Flutter developers, you must strictly follow this folder structure. <strong>Do not create files outside of <code>dev2_tasks_forms/</code>.</strong></p>
+<pre><code class="language-text">app/lib/features/dev2_tasks_forms/
+├── data/
+│   ├── models/       # Dart classes matching API JSON (e.g., task_model.dart)
+│   └── repository/   # API logic using Dio (e.g., tasks_repository.dart)
+├── providers/        # State management (e.g., tasks_provider.dart)
+├── screens/          # Full page views
+│   ├── TasksScreen.dart
+│   ├── CalendarScreen.dart
+│   ├── FormsScreen.dart
+│   └── FormResponses.dart
+└── components/       # Reusable UI parts specific to your feature
+    ├── ActivityLog.dart
+    ├── DynamicFields.dart
+    └── NotifBell.dart
+</code></pre>
+<hr>
+<h2>2. Global Naming &amp; Data Integration Dictionary</h2>
+<p>To ensure your mobile app connects perfectly with the Backend (Node.js/Express) developers, you MUST strictly use these exact JSON keys when serializing/deserializing Data Models:</p>
+<ul>
+<li><strong>Identifiers:</strong> Always map <code>userId</code>, <code>taskId</code>, <code>formId</code> correctly in your <code>.fromJson()</code> methods. <strong>NEVER</strong> use <code>_id</code> directly in UI.</li>
+<li><strong>Response Format:</strong> The backend will always respond with this structure. Ensure your repository layer checks <code>response[&#39;success&#39;]</code>:<ul>
+<li>Success: <code>{ &quot;success&quot;: true, &quot;data&quot;: { ... } }</code></li>
+<li>Error: <code>{ &quot;success&quot;: false, &quot;message&quot;: &quot;error string&quot; }</code></li>
+</ul>
+</li>
+<li><strong>Task Status Enum:</strong> Your UI must handle <code>&quot;pending&quot;</code>, <code>&quot;in-progress&quot;</code>, <code>&quot;in-review&quot;</code>, <code>&quot;completed&quot;</code>.</li>
+</ul>
+<hr>
+<h2>3. Feature Breakdown &amp; Widget Logic</h2>
+<h3>Feature 1: Task Management &amp; Calendar (A08 - A13)</h3>
+<p>Users will navigate between a List view of tasks and a Calendar view.</p>
+<p><strong>Required Widgets (<code>screens/</code> &amp; <code>components/</code>):</strong></p>
+<ol>
+<li><strong><code>TasksScreen</code> (A09) &amp; <code>TaskFilters</code> (A11):</strong><ul>
+<li><strong>Logic:</strong> A <code>Scaffold</code> with a TabBar or simple Segmented Control. Uses <code>ListView.builder</code> for displaying Task Cards.</li>
+<li><strong>Filters:</strong> Provide a <code>BottomSheet</code> containing <code>DropdownButtonFormField</code> for filtering by <code>status</code> and <code>priority</code>.</li>
+<li><strong>API Connection:</strong> <code>GET /api/tasks?status=...</code>.</li>
+</ul>
+</li>
+<li><strong><code>CalendarScreen</code> (A08):</strong><ul>
+<li><strong>Logic:</strong> Use a package like <code>table_calendar</code>. Map the <code>dueDate</code> of tasks as markers on the calendar. Tapping a day shows the list of tasks for that day below the calendar grid.</li>
+</ul>
+</li>
+<li><strong><code>AddTaskSheet</code> (A10):</strong><ul>
+<li><strong>Logic:</strong> A modal bottom sheet (or separate screen) to create a new task.</li>
+<li><strong>Form Fields:</strong> Title (<code>TextFormField</code>), Description, Assignee (Searchable Dropdown fetched from <code>/api/users/directory</code>), Due Date (<code>showDatePicker</code>), and Priority.</li>
+<li><strong>API Connection:</strong> Submits <code>POST /api/tasks</code>.</li>
+</ul>
+</li>
+<li><strong><code>TaskWorkflowView</code> (A12) &amp; <code>ActivityLog</code> (A13):</strong><ul>
+<li><strong>Logic:</strong> The details screen for a specific task. Includes prominent Action Buttons (&quot;Start Work&quot;, &quot;Submit&quot;).</li>
+<li><strong>Activity Log:</strong> A <code>ListView</code> at the bottom of the details screen showing chronological status updates.</li>
+</ul>
+</li>
+</ol>
+<p><strong>Example Provider State (<code>providers/tasks_provider.dart</code>):</strong></p>
+<pre><code class="language-dart">import &#39;package:flutter/material.dart&#39;;
+import &#39;../data/repository/tasks_repository.dart&#39;;
+
+class TasksProvider extends ChangeNotifier {
+  final TasksRepository _repository = TasksRepository();
+  List&lt;dynamic&gt; tasks = [];
+  bool isLoading = false;
+
+  Future&lt;void&gt; fetchTasks({String status = &#39;all&#39;}) async {
+    isLoading = true;
+    notifyListeners();
+
+    try {
+      final response = await _repository.getTasks(status);
+      if (response[&#39;success&#39;]) {
+        tasks = response[&#39;data&#39;];
+      }
+    } catch (e) {
+      print(&quot;Failed to fetch tasks&quot;);
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+}
+</code></pre>
+<hr>
+<h3>Feature 2: Dynamic Forms (A23 - A26)</h3>
+<p>This module allows users to see forms created by Admins and submit responses dynamically from their phones.</p>
+<p><strong>Required Widgets (<code>screens/FormsScreen.dart</code> &amp; <code>components/</code>):</strong></p>
+<ol>
+<li><strong><code>ActiveFormsGrid</code> (A23):</strong><ul>
+<li><strong>Logic:</strong> A <code>GridView</code> displaying available forms.</li>
+<li><strong>API Connection:</strong> <code>GET /api/forms/active</code>.</li>
+</ul>
+</li>
+<li><strong><code>FormInstructionsSheet</code> (A25):</strong><ul>
+<li><strong>Logic:</strong> A bottom sheet showing markdown/rich-text rules before the user starts the form. Use the <code>flutter_markdown</code> package.</li>
+</ul>
+</li>
+<li><strong><code>DynamicFieldsList</code> (A24):</strong><ul>
+<li><strong>Logic:</strong> Extremely important component. It receives a JSON array of <code>fields</code> from the backend (e.g., <code>[{ &quot;type&quot;: &quot;text&quot;, &quot;label&quot;: &quot;Name&quot; }, { &quot;type&quot;: &quot;dropdown&quot;, &quot;options&quot;: [&quot;A&quot;, &quot;B&quot;] }]</code>).</li>
+<li><strong>Rendering:</strong> Write a <code>switch</code> statement that iterates over the JSON array and returns the corresponding Flutter widgets (<code>TextFormField</code>, <code>DropdownButtonFormField</code>, etc.).</li>
+<li><strong>State:</strong> Maintain a <code>Map&lt;String, dynamic&gt; responses</code> in your Provider to hold the user&#39;s input.</li>
+<li><strong>API Connection:</strong> Submits <code>POST /api/forms/:formId/submit</code>.</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3>Feature 3: Notifications Center (A34)</h3>
+<p>The hub for all alerts.</p>
+<p><strong>Required Widgets (<code>components/NotifBell.dart</code>):</strong></p>
+<ol>
+<li><strong><code>NotifBellIcon</code>:</strong><ul>
+<li><strong>Logic:</strong> An <code>IconButton</code> meant to be placed in the global <code>AppBar</code>. Should show a red circular <code>Badge</code> if unread count &gt; 0.</li>
+</ul>
+</li>
+<li><strong><code>NotificationsScreen</code>:</strong><ul>
+<li><strong>Logic:</strong> Clicking the bell navigates here. Displays a <code>ListView</code> of notifications.</li>
+<li><strong>API Connection:</strong> <code>GET /api/notifications</code>. Needs a &quot;Mark all as read&quot; function.</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2>4. Cross-Team Integration Points (Crucial)</h2>
+<p>As a Mobile Frontend Developer, you need to use utilities built by others. Follow these strict rules to avoid bugs:</p>
+<h3>1. Global API Client (<code>core/network/api_client.dart</code>)</h3>
+<ul>
+<li>Do <strong>NOT</strong> write raw <code>http.get</code> calls containing <code>Authorization: Bearer &lt;token&gt;</code> in your repository files.</li>
+<li>The project architect will create a shared <code>Dio</code> instance in the <code>lib/core/</code> folder containing an Interceptor that automatically attaches the JWT token. </li>
+<li><strong>You must import and use this Dio client</strong> in your <code>data/repository/</code> folders.</li>
+</ul>
+<h3>2. Global State (Authentication)</h3>
+<ul>
+<li>To get the current user&#39;s ID (e.g., to default assign a task to yourself), use the global <code>AuthProvider</code>.<pre><code class="language-dart">final user = Provider.of&lt;AuthProvider&gt;(context, listen: false).currentUser;
+</code></pre>
+</li>
+</ul>
+<h3>3. Shared UI Components</h3>
+<ul>
+<li>Use standard UI elements from the <code>lib/shared/widgets/</code> library so that your module matches the material styling of the rest of the application perfectly. Do not hardcode raw hex colors; use <code>Theme.of(context).colorScheme</code>.</li>
+</ul>
+
+    </div>
+</body>
+</html>

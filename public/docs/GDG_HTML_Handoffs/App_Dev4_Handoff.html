@@ -1,0 +1,169 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Dev4 Handoff</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background: #f9fbfd; }
+        .container { background: #fff; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1, h2, h3 { color: #2c3e50; }
+        h1 { border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        pre { background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto; font-family: 'Courier New', Courier, monospace; }
+        code { background: #ecf0f1; color: #c0392b; padding: 2px 5px; border-radius: 3px; }
+        pre code { background: transparent; color: inherit; padding: 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background: #f4f7f6; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Technical Specification &amp; Handoff: App Developer 4 (Admin &amp; Chat)</h1>
+<p><strong>Developer Profile:</strong> App Dev 4<br><strong>Working Directory:</strong> <code>app/lib/features/dev4_admin_chat/</code><br><strong>Core Responsibilities:</strong> Master Admin Dashboard (RBAC/IAM), Real-Time Mobile Chat Application (WebSockets), and App Settings/Docs.
+<strong>Tech Stack:</strong> Flutter (Dart), Provider/Riverpod (State Management), Dio (API Client), Socket.io-client for Dart.</p>
+<p><strong>Objective:</strong> 
+This document provides the complete UI architecture, state management logic, widget breakdown, and API integration contracts required to build your module for iOS and Android. You are handling the most technically complex modules (IAM &amp; WebSockets). You are responsible for writing the actual implementation code. All edge cases and structures are defined below so you can work entirely independently.</p>
+<hr>
+<h2>1. Zero-Conflict Architecture (Strict Rules)</h2>
+<p>To ensure your code never conflicts with the 3 other Flutter developers, you must strictly follow this folder structure. <strong>Do not create files outside of <code>dev4_admin_chat/</code>.</strong></p>
+<pre><code class="language-text">app/lib/features/dev4_admin_chat/
+├── data/
+│   ├── models/       # Dart classes matching API JSON (e.g., chat_message.dart)
+│   └── repository/   # API logic using Dio (e.g., admin_repository.dart)
+├── providers/        # State management (e.g., chat_provider.dart)
+├── screens/          # Full page views
+│   ├── AdminScreen.dart
+│   ├── IAMConfigScreen.dart
+│   ├── ChatScreen.dart
+│   ├── DocsScreen.dart
+│   └── TermsScreen.dart
+└── components/       # Reusable UI parts specific to your feature
+    ├── MessageBubble.dart
+    ├── MemberManagementTable.dart
+    └── DevModeToggle.dart
+</code></pre>
+<hr>
+<h2>2. Global Naming &amp; Data Integration Dictionary</h2>
+<p>To ensure your mobile app connects perfectly with the Backend (Node.js/Express) developers, you MUST strictly use these exact JSON keys when serializing/deserializing Data Models:</p>
+<ul>
+<li><strong>Identifiers:</strong> Always map <code>userId</code>, <code>roleId</code>, <code>channelId</code>, <code>messageId</code> correctly in your <code>.fromJson()</code> methods. <strong>NEVER</strong> use <code>_id</code> directly in UI.</li>
+<li><strong>Response Format:</strong> The backend will always respond with this structure. Ensure your repository layer checks <code>response[&#39;success&#39;]</code>:<ul>
+<li>Success: <code>{ &quot;success&quot;: true, &quot;data&quot;: { ... } }</code></li>
+<li>Error: <code>{ &quot;success&quot;: false, &quot;message&quot;: &quot;error string&quot; }</code></li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2>3. Feature Breakdown &amp; Widget Logic</h2>
+<h3>Feature 1: Master Admin Dashboard &amp; IAM (A37 - A41)</h3>
+<p>This module allows root admins to control the entire application from their phones.</p>
+<p><strong>Required Widgets (<code>screens/AdminScreen.dart</code>, <code>IAMConfigScreen.dart</code>):</strong></p>
+<ol>
+<li><strong><code>AdminStatsOverview</code> (A37):</strong><ul>
+<li><strong>Logic:</strong> High-level metrics for the Admin (Total Users, Active Sessions).</li>
+</ul>
+</li>
+<li><strong><code>MemberManagementList</code> (A38):</strong><ul>
+<li><strong>Logic:</strong> A searchable <code>ListView</code> of all users. Tapping a user opens a Bottom Sheet to edit their profile, suspend them, or change their role (<code>PUT /api/users/:userId/status</code>).</li>
+</ul>
+</li>
+<li><strong><code>RoleIAMEditor</code> (A40):</strong><ul>
+<li><strong>Logic:</strong> The Identity and Access Management UI. Admins can create new Roles and toggle permissions on/off using Flutter <code>Switch</code> or <code>Checkbox</code> widgets (e.g., <code>canCreateTasks: true</code>).</li>
+</ul>
+</li>
+<li><strong><code>PendingApprovals</code> (A39):</strong><ul>
+<li><strong>Logic:</strong> A swipeable list (using <code>Dismissible</code>) showing users waiting for account verification. Swipe Right to Approve, Swipe Left to Reject.</li>
+</ul>
+</li>
+<li><strong><code>BulkUploadBtn</code> (A41):</strong><ul>
+<li><strong>Logic:</strong> A button that opens the native file picker (using <code>file_picker</code> package) to select a <code>.csv</code> file for bulk user creation. Submits via Dio Multipart.</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3>Feature 2: Real-Time Mobile Chat App (A42 - A43)</h3>
+<p>A full-fledged internal messaging system.</p>
+<p><strong>Required Widgets (<code>screens/ChatScreen.dart</code> &amp; <code>components/</code>):</strong></p>
+<ol>
+<li><strong><code>ChannelsDrawer</code>:</strong><ul>
+<li><strong>Logic:</strong> A side drawer listing available &quot;Channels&quot; (e.g., #general) and Direct Messages.</li>
+</ul>
+</li>
+<li><strong><code>ChatMessagesListView</code> (A42):</strong><ul>
+<li><strong>Logic:</strong> The main message area. Must be an inverted <code>ListView.builder</code> (using <code>reverse: true</code>) so it scrolls from the bottom up.</li>
+<li><strong>Real-Time Logic:</strong> Uses <code>socket_io_client</code> package. On mount, fetch historical messages via REST (<code>GET /api/chat/channels/:channelId/messages</code>). Then, listen to the socket event <code>receive_message</code> to insert new messages at index 0.</li>
+</ul>
+</li>
+<li><strong><code>MessageInputField</code> (A43):</strong><ul>
+<li><strong>Logic:</strong> A <code>TextField</code> at the bottom. Tapping &quot;Send&quot; emits a <code>send_message</code> socket event. Include an icon to pick images (<code>image_picker</code>).</li>
+</ul>
+</li>
+<li><strong><code>TypingIndicatorBubble</code>:</strong><ul>
+<li><strong>Logic:</strong> Listens for <code>user_typing</code> socket events and displays a subtle Lottie animation or text.</li>
+</ul>
+</li>
+</ol>
+<p><strong>Example Socket Provider (<code>providers/chat_provider.dart</code>):</strong></p>
+<pre><code class="language-dart">import &#39;package:flutter/material.dart&#39;;
+import &#39;package:socket_io_client/socket_io_client.dart&#39; as IO;
+import &#39;package:shared_preferences/shared_preferences.dart&#39;; // Or flutter_secure_storage
+
+class ChatProvider extends ChangeNotifier {
+  IO.Socket? socket;
+  List&lt;dynamic&gt; messages = [];
+
+  void initSocket(String channelId, String token) {
+    socket = IO.io(&#39;https://api.yourdomain.com&#39;, &lt;String, dynamic&gt;{
+      &#39;transports&#39;: [&#39;websocket&#39;],
+      &#39;autoConnect&#39;: false,
+      &#39;extraHeaders&#39;: {&#39;Authorization&#39;: &#39;Bearer $token&#39;}
+    });
+
+    socket!.connect();
+
+    socket!.onConnect((_) {
+      socket!.emit(&#39;join_channel&#39;, {&#39;channelId&#39;: channelId});
+    });
+
+    socket!.on(&#39;receive_message&#39;, (data) {
+      messages.insert(0, data); // Insert at 0 because ListView is reversed
+      notifyListeners();
+    });
+  }
+
+  void sendMessage(String channelId, String text) {
+    socket?.emit(&#39;send_message&#39;, {&#39;channelId&#39;: channelId, &#39;text&#39;: text});
+  }
+
+  @override
+  void dispose() {
+    socket?.disconnect();
+    super.dispose();
+  }
+}
+</code></pre>
+<hr>
+<h3>Feature 3: Settings &amp; Misc (A30, A32, A33)</h3>
+<p><strong>Required Widgets:</strong></p>
+<ol>
+<li><strong><code>DocsScreen</code> (A32):</strong> Fetches markdown from the backend and renders it using <code>flutter_markdown</code>.</li>
+<li><strong><code>TermsScreen</code> (A33):</strong> Static text for Terms and Conditions.</li>
+<li><strong><code>DevModeToggle</code> (A30):</strong> A switch (hidden in a drawer or activated by tapping the version number 7 times) that shows API endpoints and debug logs.</li>
+</ol>
+<hr>
+<h2>4. Cross-Team Integration Points (Crucial)</h2>
+<h3>1. Global API Client &amp; Auth</h3>
+<ul>
+<li>You must extract the JWT token from the <code>AuthProvider</code> (built by Dev 3) to pass into your <code>socket.io</code> headers.</li>
+<li>For REST calls, use the shared <code>Dio</code> client in <code>lib/core/</code> that automatically handles auth headers.</li>
+</ul>
+<h3>2. Admin Route Protection</h3>
+<ul>
+<li>Your Admin Screens MUST be protected. Before navigating to <code>AdminScreen</code>, you must verify <code>user[&#39;role&#39;] == &#39;admin&#39;</code> via the global auth state. If they are not an admin, show a &quot;Permission Denied&quot; snackbar and abort navigation.</li>
+</ul>
+
+    </div>
+</body>
+</html>

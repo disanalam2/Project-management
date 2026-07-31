@@ -1,0 +1,153 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Dev3 Handoff</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background: #f9fbfd; }
+        .container { background: #fff; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1, h2, h3 { color: #2c3e50; }
+        h1 { border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        pre { background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto; font-family: 'Courier New', Courier, monospace; }
+        code { background: #ecf0f1; color: #c0392b; padding: 2px 5px; border-radius: 3px; }
+        pre code { background: transparent; color: inherit; padding: 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background: #f4f7f6; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Technical Specification &amp; Handoff: Web Frontend Developer 3 (Meetings &amp; Forms)</h1>
+<p><strong>Developer Profile:</strong> Web Dev 3<br><strong>Working Directory:</strong> <code>web/src/app/dev3_meetings_forms/</code><br><strong>Core Responsibilities:</strong> Meeting Scheduling &amp; Attendance, Live Video Call Integration UI, and Dynamic Form Building &amp; Filling UI.
+<strong>Tech Stack:</strong> Next.js (App Router), React.js (JavaScript / <code>.jsx</code>), Vanilla CSS/Tailwind.</p>
+<p><strong>Objective:</strong> 
+This document provides the complete UI architecture, state management logic, component breakdown, and API integration contracts required to build your module. You are responsible for writing the actual implementation code. All edge cases and structures are defined below so you can work entirely independently.</p>
+<hr>
+<h2>1. Zero-Conflict Architecture (Strict Rules)</h2>
+<p>To ensure your code never conflicts with the other Web developers, you must strictly follow this folder structure. <strong>Do not create files outside of <code>dev3_meetings_forms/</code>.</strong></p>
+<pre><code class="language-text">web/src/app/dev3_meetings_forms/
+├── meetings/ (W14-W18)
+│   ├── api/          # Contains API client calls (e.g., fetchMeetings.js)
+│   ├── hooks/        # Custom React hooks (e.g., useMeetingFilters.js)
+│   ├── components/   # UI parts (e.g., MeetingCard.jsx, AttendanceModal.jsx)
+│   └── MeetingsPage.jsx # Main view file
+└── forms/ (W23-W26)
+    ├── api/
+    ├── hooks/
+    ├── components/
+    └── FormsPage.jsx
+</code></pre>
+<hr>
+<h2>2. Global Naming &amp; Data Integration Dictionary</h2>
+<p>To ensure your frontend connects perfectly with the Backend (Node.js/Express) developers, you MUST strictly use these exact JSON keys:</p>
+<ul>
+<li><strong>Identifiers:</strong> Always use <code>userId</code>, <code>meetingId</code>, <code>formId</code>. <strong>NEVER</strong> use <code>_id</code> directly in components without mapping it.</li>
+<li><strong>API Response Format:</strong> You must check <code>response.success</code> before using data:<ul>
+<li>Success: <code>{ &quot;success&quot;: true, &quot;data&quot;: { ... } }</code></li>
+<li>Error: <code>{ &quot;success&quot;: false, &quot;message&quot;: &quot;error string&quot; }</code></li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2>3. Feature Breakdown &amp; Component Logic</h2>
+<h3>Feature 1: Meeting Management (W14 - W18)</h3>
+<p>This module handles scheduling, viewing, and joining live meetings (via an external link or iframe like Stream/LiveKit).</p>
+<p><strong>Required Components (<code>meetings/components/</code>):</strong></p>
+<ol>
+<li><strong><code>MeetingDashboard.jsx</code> (W14) &amp; <code>MeetingFilters.jsx</code> (W16):</strong><ul>
+<li><strong>Logic:</strong> Displays a grid or list of upcoming meetings. Needs a filter to toggle between &quot;Upcoming&quot;, &quot;Past&quot;, and &quot;My Meetings&quot;.</li>
+<li><strong>API Connection:</strong> Calls <code>GET /api/meetings?filter=...</code> (Backend Dev 4).</li>
+</ul>
+</li>
+<li><strong><code>CreateMeetingModal.jsx</code> (W15):</strong><ul>
+<li><strong>Logic:</strong> A form for admins to schedule a meeting. Fields: <code>title</code>, <code>description</code>, <code>startTime</code>, <code>endTime</code>, <code>attendees</code> (multi-select dropdown).</li>
+<li><strong>API Connection:</strong> Submits <code>POST /api/meetings</code>.</li>
+</ul>
+</li>
+<li><strong><code>SummaryAndAttendance.jsx</code> (W17):</strong><ul>
+<li><strong>Logic:</strong> A detailed view for a specific meeting. Admins can see a checklist of invited attendees and mark them as <code>present</code> or <code>absent</code>.</li>
+<li><strong>API Connection:</strong> Submits <code>PUT /api/meetings/:meetingId/attendance</code>.</li>
+</ul>
+</li>
+<li><strong><code>JoinMeetingButton.jsx</code> (W18):</strong><ul>
+<li><strong>Logic:</strong> If the current time is close to <code>startTime</code>, this button becomes active. Clicking it should open a new tab or trigger a modal containing the video calling interface (Stream/LiveKit logic).</li>
+</ul>
+</li>
+</ol>
+<p><strong>Example API Hook (<code>meetings/hooks/useMeetings.js</code>):</strong></p>
+<pre><code class="language-javascript">import { useState, useEffect } from &#39;react&#39;;
+import apiClient from &#39;../../../shared/api/apiClient&#39;;
+
+export const useMeetings = (filter) =&gt; {
+    const [meetings, setMeetings] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() =&gt; {
+        const fetchMeetings = async () =&gt; {
+            setLoading(true);
+            try {
+                const response = await apiClient.get(`/api/meetings?filter=${filter}`);
+                if (response.data.success) {
+                    setMeetings(response.data.data);
+                }
+            } catch (err) {
+                console.error(&quot;Failed to fetch meetings&quot;);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchMeetings();
+    }, [filter]);
+
+    return { meetings, loading };
+};
+</code></pre>
+<hr>
+<h3>Feature 2: Dynamic Forms (W23 - W26)</h3>
+<p>This module allows users to see forms created by Admins and submit responses dynamically. (Note: Admin form creation is handled by Web Dev 5, you only handle the <em>filling</em> part).</p>
+<p><strong>Required Components (<code>forms/components/</code>):</strong></p>
+<ol>
+<li><strong><code>ActiveFormCards.jsx</code> (W23):</strong><ul>
+<li><strong>Logic:</strong> A grid of cards showing available forms (e.g., &quot;Monthly Feedback&quot;, &quot;Event Registration&quot;).</li>
+<li><strong>API Connection:</strong> <code>GET /api/forms/active</code> (Backend Dev 2).</li>
+</ul>
+</li>
+<li><strong><code>FormInstructions.jsx</code> (W25):</strong><ul>
+<li><strong>Logic:</strong> Displays a markdown or rich-text block explaining the rules of the form before the user starts filling it out.</li>
+</ul>
+</li>
+<li><strong><code>DynamicFormFillup.jsx</code> (W24):</strong><ul>
+<li><strong>Logic:</strong> Extremely important component. It receives a JSON array of <code>fields</code> from the backend (e.g., <code>[{ type: &#39;text&#39;, label: &#39;Name&#39; }, { type: &#39;dropdown&#39;, options: [&#39;A&#39;, &#39;B&#39;] }]</code>) and dynamically renders the corresponding React inputs (input, select, textarea).</li>
+<li><strong>State Management:</strong> Use a single state object to hold all responses: <code>const [responses, setResponses] = useState({})</code>. Update the object based on input names.</li>
+<li><strong>API Connection:</strong> Submits <code>POST /api/forms/:formId/submit</code>.</li>
+</ul>
+</li>
+<li><strong><code>FormResponsesDashboard.jsx</code> (W26):</strong><ul>
+<li><strong>Logic:</strong> (For Admins Only). A table view showing all submissions for a specific form. You must conditionally render this based on the user&#39;s role (check the global auth state).</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2>4. Cross-Team Integration Points (Crucial)</h2>
+<p>As a Web Frontend Developer, you need to use utilities built by others. Follow these strict rules to avoid bugs:</p>
+<h3>1. Global API Client (<code>shared/api/apiClient.js</code>)</h3>
+<ul>
+<li>Do <strong>NOT</strong> write raw <code>fetch()</code> calls containing <code>Authorization: Bearer &lt;token&gt;</code> in every single file.</li>
+<li>The project architect will create a shared <code>apiClient.js</code> (using Axios) in the <code>shared/</code> folder. This client will automatically attach the JWT token to every request. </li>
+<li><strong>You must import and use this client</strong> in your <code>api/</code> folders.</li>
+</ul>
+<h3>2. Video Calling Integration (Stream/LiveKit)</h3>
+<ul>
+<li>For the <code>JoinMeetingButton</code>, you will likely be embedding a third-party SDK for the video call. Keep all related UI code strictly inside <code>dev3_meetings_forms</code> to prevent bloating the rest of the application.</li>
+</ul>
+<h3>3. Shared Components</h3>
+<ul>
+<li>Use standard UI elements (Inputs, Dropdowns, DatePickers) from the <code>shared/components/</code> library so that your Dynamic Forms match the styling of the rest of the application perfectly.</li>
+</ul>
+
+    </div>
+</body>
+</html>

@@ -1,0 +1,132 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backend Dev3 Handoff</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background: #f9fbfd; }
+        .container { background: #fff; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1, h2, h3 { color: #2c3e50; }
+        h1 { border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        pre { background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto; font-family: 'Courier New', Courier, monospace; }
+        code { background: #ecf0f1; color: #c0392b; padding: 2px 5px; border-radius: 3px; }
+        pre code { background: transparent; color: inherit; padding: 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background: #f4f7f6; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Technical Specification &amp; Handoff: Backend Developer 3 (Real-time &amp; Analytics)</h1>
+<p><strong>Developer Profile:</strong> Backend Dev 3<br><strong>Working Directory:</strong> <code>backend/src/dev3_realtime_chat/</code><br><strong>Core Responsibilities:</strong> Real-time Chat (Socket.io), WebSocket Architecture, Chat History APIs, and Complex Analytics Dashboards (MongoDB Aggregation).</p>
+<p><strong>Objective:</strong> 
+This document provides the complete business logic, API contracts, and database specifications required to build your module. You are responsible for writing the actual implementation code (Node.js/Express/Socket.io). </p>
+<hr>
+<h2>1. Global Naming &amp; Data Dictionary (Must Follow)</h2>
+<p>To ensure your WebSockets and APIs connect perfectly with the Web and App teams, you MUST strictly use these exact terms:</p>
+<ul>
+<li><strong>Identifiers:</strong> Always use <code>userId</code>, <code>channelId</code>, <code>messageId</code>. <strong>NEVER</strong> use <code>user_id</code> or <code>id_channel</code>.</li>
+<li><strong>JSON Keys:</strong> Always use <code>camelCase</code> (e.g., <code>isGroupChat</code>, <code>senderId</code>, <code>readBy</code>).</li>
+<li><strong>Response Format:</strong> Every single REST API response you build MUST be wrapped in:<ul>
+<li>Success: <code>{ &quot;success&quot;: true, &quot;data&quot;: { ...your_data } }</code></li>
+<li>Error: <code>{ &quot;success&quot;: false, &quot;message&quot;: &quot;error string&quot; }</code></li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2>2. Database Schema Specifications</h2>
+<p>You are responsible for creating the Chat and Channel models.</p>
+<h3>A. <code>Channel</code> Collection (<code>ChannelModel.js</code>)</h3>
+<ul>
+<li><strong>name:</strong> String (Only required if it&#39;s a group chat).</li>
+<li><strong>isGroupChat:</strong> Boolean, Default: <code>false</code>.</li>
+<li><strong>members:</strong> Array of ObjectIds (Reference to <code>User</code> collection).</li>
+<li><strong>adminId:</strong> ObjectId (If it&#39;s a group chat, who created it).</li>
+<li><strong>lastMessageAt:</strong> Date.</li>
+</ul>
+<h3>B. <code>ChatMessage</code> Collection (<code>ChatModel.js</code>)</h3>
+<ul>
+<li><strong>channelId:</strong> ObjectId, Required. Reference to <code>Channel</code>.</li>
+<li><strong>senderId:</strong> ObjectId, Required. Reference to <code>User</code>.</li>
+<li><strong>content:</strong> String, Required.</li>
+<li><strong>fileUrl:</strong> String (Optional, for image/PDF attachments via Cloudinary).</li>
+<li><strong>readBy:</strong> Array of ObjectIds (Users who have seen the message).</li>
+</ul>
+<hr>
+<h2>3. WebSocket Architecture (Socket.io)</h2>
+<p>This is the core of your module. You will build a stateful WebSocket server using Socket.io.</p>
+<h3>A. Socket Initialization &amp; Security</h3>
+<ol>
+<li><strong>JWT Authentication:</strong> You MUST write middleware for Socket.io that extracts the JWT token from the handshake connection. Do not allow unauthorized sockets to connect.</li>
+<li><strong>Room Joining:</strong> Upon successful connection, immediately join the socket to a private room named after their <code>userId</code> (e.g., <code>socket.join(userId)</code>). This allows private messages and notifications to be routed to them.</li>
+</ol>
+<h3>B. Socket Event Contracts (WS-01 to WS-04)</h3>
+<p>You must listen for and emit the following exact event names so the Frontend teams can bind to them.</p>
+<ol>
+<li><strong>Event: <code>send_message</code></strong> (Frontend to Backend)<ul>
+<li>Payload: <code>{ &quot;channelId&quot;: &quot;...&quot;, &quot;content&quot;: &quot;Hello&quot; }</code></li>
+<li>Logic: Save message to DB, update Channel <code>lastMessageAt</code>, and emit <code>receive_message</code> to all other members of the channel.</li>
+</ul>
+</li>
+<li><strong>Event: <code>receive_message</code></strong> (Backend to Frontend)<ul>
+<li>Payload: <code>{ &quot;messageId&quot;: &quot;...&quot;, &quot;channelId&quot;: &quot;...&quot;, &quot;senderId&quot;: &quot;...&quot;, &quot;content&quot;: &quot;Hello&quot;, &quot;createdAt&quot;: &quot;...&quot; }</code></li>
+</ul>
+</li>
+<li><strong>Event: <code>typing</code></strong> and <strong><code>stop_typing</code></strong><ul>
+<li>Payload: <code>{ &quot;channelId&quot;: &quot;...&quot;, &quot;senderId&quot;: &quot;...&quot; }</code></li>
+<li>Logic: Broadcast to everyone in the channel EXCEPT the sender.</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2>4. REST APIs &amp; Business Logic</h2>
+<h3>A. Chat APIs (<code>/api/chat</code>)</h3>
+<ul>
+<li><strong>GET <code>/api/chat/channels</code></strong>: Fetch all channels the <code>req.user.userId</code> is a member of, sorted by <code>lastMessageAt</code> descending.</li>
+<li><strong>GET <code>/api/chat/:channelId/messages</code></strong>: Fetch paginated chat history for a channel.</li>
+</ul>
+<h3>B. Analytics API (API-19) - (<code>/api/analytics</code>)</h3>
+<ul>
+<li><strong>Endpoint:</strong> <code>GET /api/analytics/dashboard-stats</code></li>
+<li><strong>Auth Required:</strong> Yes (JWT + Admin Role check - attach Dev 4&#39;s middleware later).</li>
+<li><strong>Business Logic Flow:</strong> <ul>
+<li>You are responsible for writing complex <strong>MongoDB Aggregation Pipelines</strong>.</li>
+<li>You must aggregate data across collections (even collections created by Dev 2 like Tasks and Leaves). </li>
+<li><strong>Data Required:</strong> Total Active Users, Total Tasks Completed this month, Leave Approval Ratio.</li>
+<li><strong>Performance:</strong> Ensure your pipelines use <code>$match</code> early to use indexes.</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2>5. Cross-Team Integration Points (Crucial)</h2>
+<h3>1. Global Socket Accessibility (Interacting with Dev 1)</h3>
+<p><strong>CRITICAL:</strong> Dev 1 (Auth &amp; Users) is building a <code>NotificationService</code> that needs to send real-time alerts. But they do not know how Socket.io works.
+You MUST attach your initialized Socket.io <code>io</code> instance to the global Node.js object when the server starts, so Dev 1 can access it.</p>
+<pre><code class="language-javascript">// Inside your socket initialization file (e.g., chat.socket.js)
+const { Server } = require(&#39;socket.io&#39;);
+
+const initSockets = (server) =&gt; {
+    const io = new Server(server, { cors: { origin: &#39;*&#39; } });
+    
+    // Attach to global so Dev 1 can do: global.io.to(userId).emit(&#39;new_notification&#39;, ...)
+    global.io = io; 
+    
+    io.on(&#39;connection&#39;, (socket) =&gt; {
+        // ... your chat logic ...
+    });
+};
+
+module.exports = { initSockets };
+</code></pre>
+<h3>2. Authorization / Roles (Interacting with Dev 4)</h3>
+<ul>
+<li>You <strong>do not</strong> need to write the middleware that checks if a user is an &quot;Admin&quot; to view the Analytics dashboard.</li>
+<li>Dev 4 is responsible for building the <code>isAdmin</code> middleware. You will simply apply their middleware to your Analytics route later.</li>
+</ul>
+
+    </div>
+</body>
+</html>

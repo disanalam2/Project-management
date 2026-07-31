@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zero-Conflict Development Protocol</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: #fff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            color: #2980b9;
+            margin-top: 40px;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 5px;
+        }
+
+        h3 {
+            color: #34495e;
+        }
+
+        .rule-card {
+            background: #f9fbfd;
+            border-left: 4px solid #e74c3c;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-radius: 0 5px 5px 0;
+        }
+
+        .rule-card h3 {
+            margin-top: 0;
+            color: #c0392b;
+        }
+
+        .setup-section {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 25px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .setup-section h2 {
+            color: #3498db;
+            border-bottom-color: #34495e;
+            margin-top: 0;
+        }
+
+        .step {
+            margin-bottom: 20px;
+        }
+
+        .step h4 {
+            color: #f1c40f;
+            margin-bottom: 5px;
+        }
+
+        pre {
+            background: #1a252f;
+            color: #2ecc71;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        code {
+            background: #ecf0f1;
+            color: #c0392b;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+
+        .setup-section code {
+            background: #34495e;
+            color: #e74c3c;
+        }
+
+        .highlight {
+            font-weight: bold;
+            color: #27ae60;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>GDG Zero-Conflict Development Protocol</h1>
+        <p style="text-align: center; font-size: 1.1em; color: #7f8c8d;">
+            Official guidelines to ensure 0% merge conflicts and seamless collaboration for a team of 13 developers.
+        </p>
+
+        <!-- SECTION 1: The 5 Rules -->
+        <h2>Part 1: The 5 Golden Rules of Operations</h2>
+
+        <div class="rule-card" style="border-left-color: #3498db;">
+            <h3 style="color: #2980b9;">1. Three Separate Git Repositories (No Monorepo)</h3>
+            <p>Never put all 13 developers in one single Github repository. You must create 3 completely isolated
+                repositories:</p>
+            <ul>
+                <li><code>gdg-backend-core</code> (Only the 4 Node.js devs commit here)</li>
+                <li><code>gdg-web-frontend</code> (Only the 5 Next.js devs commit here)</li>
+                <li><code>gdg-app-flutter</code> (Only the 4 Flutter devs commit here)</li>
+            </ul>
+            <p><em>Benefit: A Web developer's mistake can never accidentally break the Backend code.</em></p>
+        </div>
+
+        <div class="rule-card" style="border-left-color: #9b59b6;">
+            <h3 style="color: #8e44ad;">2. The "Shared Folder" Guardian Rule</h3>
+            <p>In our architecture, the <code>shared/</code> folder contains global components (API Client, Buttons,
+                Auth State). This is the #1 place where conflicts happen when two developers edit the same global
+                button.</p>
+            <p><strong>Rule:</strong> Assign one Senior Developer as the Guardian of the shared folder. Other developers
+                build their own local components. If a global component needs a change, they must request the Guardian
+                to do it.</p>
+        </div>
+
+        <div class="rule-card" style="border-left-color: #e67e22;">
+            <h3 style="color: #d35400;">3. Automated Pre-Commit Hooks (Husky)</h3>
+            <p>Most merge conflicts occur because Dev 1 uses "Tabs" and Dev 2 uses "Spaces".</p>
+            <p><strong>Rule:</strong> No code can be committed unless it passes through <strong>Husky and
+                    Prettier</strong>. The system will automatically format the code into a unified standard the moment
+                a developer types <code>git commit</code>. Formatting conflicts will drop to zero.</p>
+        </div>
+
+        <div class="rule-card" style="border-left-color: #2ecc71;">
+            <h3 style="color: #27ae60;">4. Postman Mock Servers (Frontend First)</h3>
+            <p>Frontend developers usually write bad dummy code while waiting for the Backend APIs to be finished,
+                leading to major conflicts during integration.</p>
+            <p><strong>Rule:</strong> Setup a Postman Mock Server on Day 1. The frontend team will point their
+                <code>.env</code> file to this fake API URL and build 100% of their UI and State Management logic
+                immediately using the exact JSON contracts defined in the Handoff files.</p>
+        </div>
+
+        <div class="rule-card" style="border-left-color: #e74c3c;">
+            <h3 style="color: #c0392b;">5. Strict Pull Request (PR) Policy</h3>
+            <p>No developer is allowed to push code directly to the <code>main</code> branch.</p>
+            <p><strong>Rule:</strong> Developers must work on isolated branches (e.g., <code>feature/dev1_auth</code>).
+                When finished, they create a Pull Request. Code is only merged into <code>main</code> after another
+                developer reviews and approves it.</p>
+        </div>
+
+        <!-- SECTION 2: Technical Setup -->
+        <div class="setup-section">
+            <h2>Part 2: Technical Setup Guide for Team Leads</h2>
+            <p>Follow these steps to initialize the Zero-Conflict tools for your repositories.</p>
+
+            <h3>A. Setting up Pre-Commit Hooks (Next.js & Node.js)</h3>
+            <div class="step">
+                <h4>Step 1: Install Dependencies</h4>
+                <p>Run this in the root of your Web and Backend repositories:</p>
+                <pre>npm install --save-dev husky lint-staged prettier</pre>
+            </div>
+            <div class="step">
+                <h4>Step 2: Initialize Husky</h4>
+                <p>This creates a <code>.husky</code> folder:</p>
+                <pre>npx husky init</pre>
+            </div>
+            <div class="step">
+                <h4>Step 3: Configure package.json</h4>
+                <p>Add this exact configuration to tell the system to format files before committing:</p>
+                <pre>{
+  "scripts": {
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "**/*.{js,jsx,ts,tsx,json,md}": [
+      "prettier --write"
+    ]
+  }
+}</pre>
+            </div>
+            <div class="step">
+                <h4>Step 4: Configure the Hook</h4>
+                <p>Open the file <code>.husky/pre-commit</code> and write:</p>
+                <pre>#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+npx lint-staged</pre>
+                <p><em>(For Flutter, use the <code>git_hooks</code> package with the <code>dart format</code>
+                        command).</em></p>
+            </div>
+
+            <hr style="border-color: #34495e; margin: 30px 0;">
+
+            <h3>B. Setting up Postman Mock Servers</h3>
+            <div class="step">
+                <h4>Step 1: Create a Collection</h4>
+                <p>Open Postman, click <strong>New > Collection</strong>. Name it <code>GDG App APIs</code> and share it
+                    with the team.</p>
+            </div>
+            <div class="step">
+                <h4>Step 2: Add API Requests & Examples</h4>
+                <p>Add a request (e.g., <code>GET /api/users/me/stats</code>). Click the <strong>Three Dots
+                        (...)</strong> > <strong>Add Example</strong>. Paste the exact JSON response from our Handoff
+                    documents and save it.</p>
+            </div>
+            <div class="step">
+                <h4>Step 3: Generate the Mock Server</h4>
+                <p>On the left sidebar, click <strong>Mock Servers</strong> > <strong>Create Mock Server</strong>.
+                    Select your collection. Postman will generate a public URL like
+                    <code>https://b48a2-mock.pstmn.io</code>.</p>
+            </div>
+            <div class="step">
+                <h4>Step 4: Connect the Frontend</h4>
+                <p>Tell Web and App developers to set this URL as their <code>API_BASE_URL</code>. They can now build
+                    the entire app using this mock data without waiting for the backend!</p>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+
+</html>

@@ -1,0 +1,150 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backend Dev1 Handoff</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background: #f9fbfd; }
+        .container { background: #fff; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1, h2, h3 { color: #2c3e50; }
+        h1 { border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        pre { background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto; font-family: 'Courier New', Courier, monospace; }
+        code { background: #ecf0f1; color: #c0392b; padding: 2px 5px; border-radius: 3px; }
+        pre code { background: transparent; color: inherit; padding: 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background: #f4f7f6; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Technical Specification &amp; Handoff: Backend Developer 1 (Auth &amp; Users)</h1>
+<p><strong>Developer Profile:</strong> Backend Dev 1<br><strong>Working Directory:</strong> <code>backend/src/dev1_auth_users/</code><br><strong>Core Responsibilities:</strong> Authentication System, User Profiles, Member Directory, and Notification Service architecture.</p>
+<p><strong>Objective:</strong> 
+This document provides the complete business logic, API contracts, and database specifications required to build your module. You are responsible for writing the actual implementation code (Node.js/Express). All edge cases, inputs, and outputs are defined below so you can work entirely independently without needing to consult the rest of the team.</p>
+<hr>
+<h2>1. Global Naming &amp; Data Dictionary (Must Follow)</h2>
+<p>To ensure your APIs connect perfectly with the Web, App, and other Backend developers without anyone having to ask questions, you MUST strictly use these exact terms in your Database schemas and API JSON responses:</p>
+<ul>
+<li><strong>Identifiers:</strong> Always use <code>userId</code>, <code>roleId</code>. <strong>NEVER</strong> use <code>user_id</code>, <code>uid</code>, <code>id_user</code>, or <code>role_id</code>.</li>
+<li><strong>JSON Keys:</strong> Always use <code>camelCase</code> (e.g., <code>profilePicture</code>, <code>socialLinks</code>, <code>onboardingComplete</code>).</li>
+<li><strong>Response Format:</strong> Every single API response you build MUST be wrapped in this exact format:<ul>
+<li>Success: <code>{ &quot;success&quot;: true, &quot;data&quot;: { ...your_data } }</code></li>
+<li>Error: <code>{ &quot;success&quot;: false, &quot;message&quot;: &quot;error string&quot; }</code></li>
+</ul>
+</li>
+<li><strong>Enums:</strong> Status strings must be strictly lowercase: <code>&quot;active&quot;</code>, <code>&quot;inactive&quot;</code>, <code>&quot;suspended&quot;</code>. Do not capitalize them in the backend.</li>
+</ul>
+<hr>
+<h2>2. Database Schema Specifications</h2>
+<p>You are responsible for creating the <code>User</code> Mongoose model. Ensure your schema strictly follows these requirements:</p>
+<h3><code>User</code> Collection Fields:</h3>
+<ul>
+<li><strong>name:</strong> String, Required.</li>
+<li><strong>email:</strong> String, Required, Unique, Lowercase.</li>
+<li><strong>passwordHash:</strong> String. <strong>Security Rule:</strong> Must be excluded from standard queries by default (use <code>select: false</code> in Mongoose) to prevent accidental data leaks.</li>
+<li><strong>googleId:</strong> String, Sparse index. (For users who sign up via Google).</li>
+<li><strong>roleId:</strong> ObjectId, Required. Reference to the <code>Role</code> collection (which will be built by Dev 4).</li>
+<li><strong>profilePicture:</strong> String (Will store Cloudinary URLs). Default: Empty string.</li>
+<li><strong>bio:</strong> String, Max length 500 characters. Default: Empty string.</li>
+<li><strong>skills:</strong> Array of Strings.</li>
+<li><strong>socialLinks:</strong> Object containing <code>github</code> (String) and <code>linkedin</code> (String).</li>
+<li><strong>onboardingComplete:</strong> Boolean, Default: <code>false</code>.</li>
+<li><strong>status:</strong> String enum (<code>&#39;active&#39;</code>, <code>&#39;inactive&#39;</code>, <code>&#39;suspended&#39;</code>), Default: <code>&#39;active&#39;</code>.</li>
+<li><strong>lastLogin:</strong> Date, Default: Current date.</li>
+</ul>
+<hr>
+<h2>2. API Contracts &amp; Business Logic</h2>
+<h3>A. Authentication Module (<code>/api/auth</code>)</h3>
+<h4>1. Register User (API-01)</h4>
+<ul>
+<li><strong>Endpoint:</strong> <code>POST /api/auth/register</code></li>
+<li><strong>Auth Required:</strong> No</li>
+<li><strong>Request Payload:</strong> <code>{ &quot;name&quot;: &quot;string&quot;, &quot;email&quot;: &quot;string&quot;, &quot;password&quot;: &quot;string&quot; }</code></li>
+<li><strong>Business Logic Flow:</strong><ol>
+<li>Validate input fields.</li>
+<li>Check if the email already exists. If yes, return <code>409 Conflict</code>.</li>
+<li>Hash the password using <code>bcrypt</code> (Salt rounds: 10).</li>
+<li>Save the user to the database. Assign a default <code>roleId</code> (e.g., standard member).</li>
+<li>Generate a JWT token valid for 7 days. Payload must include <code>{ userId, roleId }</code>.</li>
+</ol>
+</li>
+<li><strong>Success Response (201):</strong> <code>{ &quot;success&quot;: true, &quot;token&quot;: &quot;...&quot;, &quot;data&quot;: { ...user_object_without_password } }</code></li>
+</ul>
+<h4>2. User Login (API-04)</h4>
+<ul>
+<li><strong>Endpoint:</strong> <code>POST /api/auth/login</code></li>
+<li><strong>Auth Required:</strong> No</li>
+<li><strong>Request Payload:</strong> <code>{ &quot;email&quot;: &quot;string&quot;, &quot;password&quot;: &quot;string&quot; }</code> OR <code>{ &quot;googleToken&quot;: &quot;string&quot; }</code></li>
+<li><strong>Business Logic Flow (Email/Pass):</strong><ol>
+<li>Fetch user by email. <strong>Important:</strong> You must explicitly select <code>passwordHash</code> in your query to compare it.</li>
+<li>Compare passwords using <code>bcrypt</code>. If mismatch, return <code>401 Unauthorized</code>.</li>
+<li>Update <code>lastLogin</code> timestamp.</li>
+<li>Generate and return JWT.</li>
+</ol>
+</li>
+<li><strong>Business Logic Flow (Google OAuth):</strong><ol>
+<li>Verify the Google token using <code>google-auth-library</code>.</li>
+<li>Extract email. If user exists, log them in. If not, auto-register them without a password and log them in.</li>
+</ol>
+</li>
+</ul>
+<hr>
+<h3>B. User Profile Module (<code>/api/users</code>)</h3>
+<h4>1. Complete Onboarding (API-02)</h4>
+<ul>
+<li><strong>Endpoint:</strong> <code>POST /api/users/onboarding</code></li>
+<li><strong>Auth Required:</strong> Yes (Requires JWT)</li>
+<li><strong>Request Payload:</strong> <code>{ &quot;bio&quot;: &quot;string&quot;, &quot;skills&quot;: [&quot;string&quot;], &quot;socialLinks&quot;: { &quot;github&quot;: &quot;string&quot; } }</code></li>
+<li><strong>Business Logic Flow:</strong><ol>
+<li>Extract <code>userId</code> from the decoded JWT.</li>
+<li>Update the user&#39;s document with the provided fields.</li>
+<li>Set <code>onboardingComplete</code> to <code>true</code>.</li>
+</ol>
+</li>
+<li><strong>Success Response (200):</strong> Updated user object.</li>
+</ul>
+<h4>2. Member Directory (API-03)</h4>
+<ul>
+<li><strong>Endpoint:</strong> <code>GET /api/users/directory</code></li>
+<li><strong>Auth Required:</strong> Yes (Requires JWT)</li>
+<li><strong>Query Parameters:</strong> <code>?page=1&amp;limit=20&amp;search=john</code></li>
+<li><strong>Business Logic Flow:</strong><ol>
+<li>Implement pagination using <code>skip</code> and <code>limit</code>.</li>
+<li>If <code>search</code> query is provided, perform a case-insensitive regex search on the <code>name</code> field.</li>
+<li><strong>Security Rule:</strong> You MUST project/select ONLY public fields (<code>name</code>, <code>profilePicture</code>, <code>skills</code>, <code>bio</code>, <code>socialLinks</code>). Do not return emails, status, or system IDs to the public directory.</li>
+</ol>
+</li>
+<li><strong>Success Response (200):</strong> <code>{ &quot;success&quot;: true, &quot;data&quot;: [...], &quot;meta&quot;: { &quot;total&quot;: 100, &quot;page&quot;: 1, &quot;totalPages&quot;: 5 } }</code></li>
+</ul>
+<h4>3. Get / Update My Profile (API-05, API-06)</h4>
+<ul>
+<li><strong>Endpoints:</strong> <code>GET /api/users/me</code> and <code>PUT /api/users/me</code></li>
+<li><strong>Auth Required:</strong> Yes</li>
+<li><strong>Note on File Uploads:</strong> For the <code>PUT</code> request, if a user updates their profile picture, the Web Frontend team will handle uploading the image to Cloudinary. Your API will simply receive the final Cloudinary Image URL string in the JSON payload. Do not write Multer/file upload logic here.</li>
+</ul>
+<hr>
+<h2>3. Cross-Team Integration Points (Crucial)</h2>
+<p>As part of the backend, your module will interact with systems built by other developers. Follow these strict rules to avoid merge conflicts and bugs:</p>
+<h3>1. Notifications (Interacting with Dev 3 &amp; Dev 4)</h3>
+<p>You are responsible for writing a <code>NotificationService</code> class. Other developers (like the Tasks Dev or Meetings Dev) will import your class to send alerts.</p>
+<ul>
+<li><strong>What you must build:</strong> A reusable function/class <code>triggerNotification(userId, title, message, type)</code>.</li>
+<li><strong>Inside this function, you must do two things:</strong><ol>
+<li><strong>Database Save:</strong> Insert a record into the <code>Notification</code> collection. (Note: Dev 4 will create the <code>Notification</code> Mongoose Schema, you just need to insert into it).</li>
+<li><strong>Real-time Alert:</strong> Emit a WebSocket event. Dev 3 will set up Socket.io and attach it to the <code>global</code> object. You will trigger it like this: <code>global.io.to(userId).emit(&#39;new_notification&#39;, payload)</code>.</li>
+</ol>
+</li>
+</ul>
+<h3>2. Authorization / Roles (Interacting with Dev 4)</h3>
+<ul>
+<li>You are responsible for generating the JWT in the Auth Controller.</li>
+<li>You <strong>do not</strong> need to write the middleware that checks if a user is an &quot;Admin&quot; or &quot;Manager&quot;. Dev 4 is responsible for building the RBAC (Role-Based Access Control) middleware.</li>
+<li>Your only job is to ensure that <code>roleId</code> is included inside the JWT payload when you generate it. Dev 4&#39;s middleware will read that <code>roleId</code> later.</li>
+</ul>
+
+    </div>
+</body>
+</html>

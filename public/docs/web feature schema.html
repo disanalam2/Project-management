@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Features Technical Specification</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            background-color: #ffffff;
+            color: #333333;
+            padding: 40px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #1f2937;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            color: #2563eb;
+            margin-top: 40px;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 8px;
+            font-size: 1.5em;
+        }
+
+        h3 {
+            color: #111827;
+            margin-top: 30px;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        ul {
+            margin-top: 5px;
+            margin-bottom: 15px;
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        code {
+            background-color: #f3f4f6;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: monospace;
+            color: #dc2626;
+            font-size: 0.9em;
+        }
+
+        .desc {
+            color: #4b5563;
+            font-size: 1.05em;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Web Features Technical Specification</h1>
+    <p class="desc">This document provides an A-Z detailed technical specification of all the Web Portal Features,
+        sequentially numbered from W01 to W43. Features are categorized strictly by their logical domains to guide the
+        Web Frontend Development team.</p>
+
+    <h2>1. Dashboard & Core Metrics</h2>
+
+    <h3>W01: Welcome Message & Date</h3>
+    <ul>
+        <li><strong>Data Source:</strong> <code>UserModel</code></li>
+        <li><strong>Implementation:</strong> The web portal fetches the currently logged-in user's <code>name</code>
+            from the <code>UserModel</code> and uses the browser's time to determine the greeting (e.g., "Good Morning,
+            {name}").</li>
+    </ul>
+
+    <h3>W02: Member & Task Statistics</h3>
+    <ul>
+        <li><strong>Data Source:</strong> <code>UserModel</code>, <code>LeaveApplicationModel</code>,
+            <code>TaskModel</code></li>
+        <li><strong>Implementation:</strong>
+            <ul>
+                <li><em>Total Active/Alumni:</em> Query <code>UserModel</code> where <code>status</code> is 'active' or
+                    'alumni'.</li>
+                <li><em>Members on Leave:</em> Query <code>LeaveApplicationModel</code> where <code>status</code> =
+                    'approved' and the current date falls within the <code>duration</code> object.</li>
+                <li><em>Active Tasks:</em> Query <code>TaskModel</code> for tasks assigned to the user where
+                    <code>status</code> is 'in_progress'.</li>
+            </ul>
+        </li>
+    </ul>
+
+    <h3>W03: Today's Active Meeting</h3>
+    <ul>
+        <li><strong>Data Source:</strong> <code>MeetingModel</code></li>
+        <li><strong>Implementation:</strong> Query <code>MeetingModel</code> where <code>date_time</code> matches
+            today's date. The widget displays <code>title</code>, <code>date_time</code>, and <code>agenda</code>.
+            Clicking it routes to the Meeting Details page, passing the <code>_id</code>.</li>
+    </ul>
+
+    <h3>W04: My Tasks</h3>
+    <ul>
+        <li><strong>Data Source:</strong> <code>TaskModel</code></li>
+        <li><strong>Implementation:</strong> Query <code>TaskModel</code> where the user's <code>_id</code> is inside
+            the <code>assigned_to</code> array. Displays <code>name</code> and domain (via <code>domain_id</code>).</li>
+    </ul>
+
+    <h3>W05: Quick Action Buttons</h3>
+    <ul>
+        <li><strong>Implementation:</strong> UI-level shortcuts (e.g., "Apply Leave", "New Task") that navigate to
+            respective web pages. Visibility controlled by <code>RoleModel</code> policies.</li>
+    </ul>
+
+    <h3>W06: Community Updates & Task Load Graph</h3>
+    <ul>
+        <li><strong>Data Source:</strong> <code>UpdatesModel</code>, <code>TaskModel</code></li>
+        <li><strong>Implementation:</strong>
+            <ul>
+                <li><em>Updates:</em> Query <code>UpdatesModel</code> for the latest broadcasts (using
+                    <code>title</code> and <code>content</code>).</li>
+                <li><em>Task Load:</em> Aggregation query on <code>TaskModel</code> grouping by <code>status</code> and
+                    <code>domain_id</code> to render a visual chart (e.g., using Chart.js/Recharts) on the dashboard.
+                </li>
+            </ul>
+        </li>
+    </ul>
+
+    <h3>W07: Global Search Bar (Universal Search)</h3>
+    <ul>
+        <li><strong>Data Source:</strong> <code>UserModel</code>, <code>TaskModel</code>, <code>MeetingModel</code>,
+            <code>RepositoryModel</code></li>
+        <li><strong>Implementation:</strong> A universal search bar located in the top navigation bar of the web portal.
+            It executes text searches across tasks, meetings, members, and documents for quick routing.</li>
+    </ul>
+
+    <h2>2. Tasks & Calendar</h2>
+
+    <h3>W08: Calendar View</h3>
+    <ul>
+        <li><strong>Data Source:</strong> <code>TaskModel</code>, <code>MeetingModel</code></li>
+        <li><strong>Implementation:</strong> Fetches all tasks and meetings for the month. Uses <code>deadline</code>
+            (Tasks) and <code>date_time</code> (Meetings) to visually pin them on a full-page web calendar grid.</li>
+    </ul>
+
+    <h3>W09: Tasks List View</h3>
+    <ul>
+        <li><strong>Data Source:</strong> <code>TaskModel</code>, <code>NotificationModel</code></li>
+        <li><strong>Implementation:</strong> Lists tasks sorted by <code>deadline</code> in a web data table. Includes a
+            reassignment feature which triggers a new <code>NotificationModel</code> document for assigned/unassigned
+            members.</li>
+    </ul>
+
+    <h3>W10: Add Task Button (Admin/Authority)</h3>
+    <ul>
+        <li><strong>Data Source:</strong> <code>TaskModel</code>, <code>RoleModel</code>, <code>NotificationModel</code>
+        </li>
+        <li><strong>Implementation:</strong> Checks IAM RBAC. Opens a modal or page to create a <code>TaskModel</code>
+            document with <code>name</code>, <code>deadline</code>, <code>mentor_ids</code>, <code>description</code>,
+            <code>type</code>, <code>priority</code>, <code>attachments</code>, <code>assigned_to</code>, and
+            <code>domain_id</code>.</li>
+    </ul>
+
+    <h3>W11: Task Filters (Completed, In Progress, Not Started)</h3>
+    <ul>
+        <li><strong>Data Source:</strong> <code>TaskModel</code></li>
+        <li><strong>Implementation:</strong> UI dropdowns/tabs that query the tasks list strictly by the
+            <code>status</code> field in <code>TaskModel</code>.</li>
+    </ul>
+
+    <h3>W12: Task Workflow & Table</h3>
+    <ul>
+        <li><strong>Data Source:</strong> <code>TaskModel</code></li>
+        <li><strong>Implementation:</strong> Users accept tasks (updates <code>status</code> to 'in_progress').
+            Submission appends an object to <code>TaskModel.submissions</code>. Mentors can review via
+            <code>TaskModel.reviews</code> array.</li>
+    </ul>
+
+    <h3>W13: Task Activity Log (Audit Trail)</h3>
+    <ul>
+        <li><strong>Data Source:</strong> <code>TaskModel</code></li>
+        <li><strong>Implementation:</strong> A timeline component in the Task Details page rendering the
+            <code>TaskModel.history</code> array to track assignments and status changes.</li>
+    </ul>
+
+    <h2>3. Meetings</h2>
+
+    <h3>W14: Meeting Dashboards</h3>
+    <ul>
+        <li><strong>Data Source:</strong> <code>MeetingModel</code></li>
+        <li><strong>Implementation:</strong> Fetches and displays all meetings as informational cards in a responsive
+            web grid.</li>
+    </ul>
+
+    <h3>W15: Create Meeting</h3>
+    <ul>
+        <li><strong>Data Source:</strong> <code>MeetingModel</code>, <code>RoleModel</code></li>
+        <li><strong>Implementation:</strong> Validates admin authority via RBAC. Creates a <code>MeetingModel</code>
+            document populated with <code>title</code>, <code>agenda</code>, <code>venue</code>,
+            <code>target_batch</code>, and <code>target_domain</code>.</li>
+    </ul>
+
+    <h3>W16: Meeting Filters</h3>
+    <ul>
+        <li><strong>Data Source:</strong> <code>MeetingModel</code></li>
+        <li><strong>Implementation:</strong> Web UI filters to categorize meetings by <code>status</code> ('upcoming',
+            'ongoing', 'completed').</li>
+    </ul>
+
+    <h3>W17: Meeting Summary & Attendance</h3>
+    <ul>
+        <li><strong>Data Source:</strong> <code>MeetingModel</code>, <code>AttendanceModel</code></li>
+        <li><strong>Implementation:</strong> Admins update <code>MeetingModel.mom_content</code> using a rich text
+            editor. Attendance tracking creates/updates <code>AttendanceModel</code> documents linking
+            <code>meeting_id</code> and <code>user_id</code>.</li>
+    </ul>
+
+    <h3>W18: Integrated Meeting</h3>
+    <ul>
+        <li><strong>Implementation:</strong> Uses <code>MeetingModel.venue.link</code> to open Google Meet or other
+            platforms in a new browser tab.</li>
+    </ul>
+
+    <h2>4. Registry / Analytics</h2>
+
+    <h3>W19: Tables of Works</h3>
+    <ul>
+        <li><strong>Data Source:</strong> <code>TaskModel</code></li>
+        <li><strong>Implementation:</strong> Queries <code>TaskModel</code> where <code>status</code> = 'completed'.
+            Displays who completed it. Export feature parses this JSON to trigger a CSV file download for the admin.
+        </li>
+    </ul>
+
+    <h3>W20: Tables of Meeting</h3>
+    <ul>
+        <li><strong>Data Source:</strong> <code>AttendanceModel</code>, <code>MeetingModel</code></li>
+        <li><strong>Implementation:</strong> Aggregates <code>AttendanceModel</code> for a specific
+            <code>meeting_id</code> to count present vs. absent members.</li>
+    </ul>
+
+    <h2>5. Leave Application</h2>
+
+    <h3>W21: Leave Application Management</h3>
+    <ul>
+        <li><strong>Data Source:</strong> <code>LeaveApplicationModel</code></li>
+        <li><strong>Implementation:</strong> User fills a web form to create a record with <code>user_id</code>,
+            <code>leave_type</code>, <code>target</code>, <code>duration</code>, and <code>reason</code>. Defaults to
+            <code>status</code> = 'pending'.</li>
+    </ul>
+
+    <h2>6. Repository</h2>
+
+    <h3>W22: Essential Documents</h3>
+    <ul>
+        <li><strong>Data Source:</strong> <code>RepositoryModel</code></li>
+        <li><strong>Implementation:</strong> Queries <code>RepositoryModel</code> based on user's domain and role.
+            Displays <code>name</code>, <code>type</code>, and provides hyperlink buttons from <code>file_urls</code>.
+        </li>
+    </ul>
+
+    <h2>7. Forms</h2>
+
+    <h3>W23: Active Form Cards</h3>
+    <ul>
+        <li><strong>Data Source:</strong> <code>FormModel</code></li>
+        <li><strong>Implementation:</strong> Queries <code>FormModel</code> where <code>deadline</code> > current time.
+        </li>
+    </ul>
+
+    <h3>W24: Form Fillup Fields</h3>
+    <ul>
+        <li><strong>Data Source:</strong> <code>FormModel</code>, <code>FormSubmissionModel</code></li>
+        <li><strong>Implementation:</strong> Dynamically renders web form inputs based on <code>fields</code> array in
+            <code>FormModel</code>. On submit, creates a <code>FormSubmissionModel</code> linking <code>form_id</code>
+            and <code>user_id</code>.</li>
+    </ul>
+
+    <h3>W25: Form Instructions</h3>
+    <ul>
+        <li><strong>Data Source:</strong> <code>FormModel</code></li>
+        <li><strong>Implementation:</strong> Displays instructions dynamically read from the <code>FormModel</code>.
+        </li>
+    </ul>
+
+    <h3>W26: Form Responses Dashboard (Admin Feature)</h3>
+    <ul>
+        <li><strong>Data Source:</strong> <code>FormSubmissionModel</code>, <code>FormModel</code></li>
+        <li><strong>Implementation:</strong> Admin can view all submissions for a specific form. Renders the JSON
+            <code>responses</code> in a detailed web table or analytical chart, with an option to export to CSV.</li>
+    </ul>
+
+    <h2>8. Profile, Settings & Auth</h2>
+
+    <h3>W27: User Profile</h3>
+    <ul>
+        <li><strong>Data Source:</strong> <code>UserModel</code>, <code>TaskModel</code></li>
+        <li><strong>Implementation:</strong> Fetches <code>profile_pic</code>, <code>name</code>, <code>domain</code>,
+            and <code>task_count</code> from models.</li>
+    </ul>
+
+    <h3>W28: Sidebar Options</h3>
+    <ul>
+        <li><strong>Implementation:</strong> Global Web UI navigation menu (Left Sidebar for Desktop, Hamburger menu for
+            Mobile browsers).</li>
+    </ul>
+
+    <h3>W29: Dark / Light Mode</h3>
+    <ul>
+        <li><strong>Implementation:</strong> Web UI theme toggle, saves preference in LocalStorage or cookies.</li>
+    </ul>
+
+    <h3>W30: Developer Mode</h3>
+    <ul>
+        <li><strong>Implementation:</strong> Hidden toggle that enables extra debugging tools within the web console or
+            UI.</li>
+    </ul>
+
+    <h3>W31: Login & Auth</h3>
+    <ul>
+        <li><strong>Data Source:</strong> <code>UserModel</code></li>
+        <li><strong>Implementation:</strong> Authenticates via email / password or Google OAuth. Saves JWT token in
+            HTTP-only cookies or LocalStorage.</li>
+    </ul>
+
+    <h3>W32: Detailed Documentation</h3>
+    <ul>
+        <li><strong>Implementation:</strong> Static web pages serving as a guide/help section for normal members.</li>
+    </ul>
+
+    <h3>W33: Terms and Conditions</h3>
+    <ul>
+        <li><strong>Implementation:</strong> Static web page displaying the official rules.</li>
+    </ul>
+
+    <h3>W34: Web Notification Center (Bell Icon)</h3>
+    <ul>
+        <li><strong>Data Source:</strong> <code>NotificationModel</code></li>
+        <li><strong>Implementation:</strong> A bell icon in the navbar opening a dropdown list of the user's
+            notifications.</li>
+    </ul>
+
+    <h3>W35: Team Directory (For Normal Members)</h3>
+    <ul>
+        <li><strong>Data Source:</strong> <code>UserModel</code></li>
+        <li><strong>Implementation:</strong> A directory/search page allowing normal members to view their peers.</li>
+    </ul>
+
+    <h3>W36: Forgot Password & Reset Flow</h3>
+    <ul>
+        <li><strong>Data Source:</strong> <code>UserModel</code></li>
+        <li><strong>Implementation:</strong> Standard OTP/Email flow for password reset on the web portal.</li>
+    </ul>
+
+    <h2>9. Admin Authority</h2>
+
+    <h3>W37: Admin Dashboard</h3>
+    <ul>
+        <li><strong>Data Source:</strong> Aggregation across Models</li>
+        <li><strong>Implementation:</strong> Accessible only if <code>RoleModel</code> grants admin policies. Shows
+            high-level metrics and control panels.</li>
+    </ul>
+
+    <h3>W38: Member Management (List of all members)</h3>
+    <ul>
+        <li><strong>Data Source:</strong> <code>UserModel</code>, <code>RoleModel</code></li>
+        <li><strong>Implementation:</strong> Admins can modify <code>status</code> (make alumni) and update
+            <code>volatile_data</code> in the <code>UserModel</code> via a management table.</li>
+    </ul>
+
+    <h3>W39: Application Approvals</h3>
+    <ul>
+        <li><strong>Data Source:</strong> <code>LeaveApplicationModel</code></li>
+        <li><strong>Implementation:</strong> Admins fetch 'pending' leaves. On action, updates <code>status</code> and
+            <code>reviewed_by</code>.</li>
+    </ul>
+
+    <h3>W40: Dynamic Roles & Permissions Manager (IAM UI)</h3>
+    <ul>
+        <li><strong>Data Source:</strong> <code>RoleModel</code>, <code>PolicyModel</code></li>
+        <li><strong>Implementation:</strong> Dedicated Superadmin page in the Web Portal to create custom roles, assign
+            specific access policies, and link them to users dynamically.</li>
+    </ul>
+
+    <h3>W41: Bulk Member Upload (CSV)</h3>
+    <ul>
+        <li><strong>Data Source:</strong> <code>UserModel</code></li>
+        <li><strong>Implementation:</strong> Allows Admins to upload a CSV file of member details via a drag-and-drop
+            web zone for batch insertion.</li>
+    </ul>
+
+    <h2>10. Chat Feature</h2>
+
+    <h3>W42: Core Chat</h3>
+    <ul>
+        <li><strong>Data Source:</strong> <code>ChannelModel</code>, <code>ChatModel</code></li>
+        <li><strong>Implementation:</strong> Group chat using <code>ChannelModel</code> and <code>ChatModel</code> with
+            WebSockets running in the browser.</li>
+    </ul>
+
+    <h3>W43: Advanced Chat (File Sharing & Mentions)</h3>
+    <ul>
+        <li><strong>Data Source:</strong> <code>ChatModel</code>, <code>RepositoryModel</code>,
+            <code>NotificationModel</code></li>
+        <li><strong>Implementation:</strong> Enhances the web chat by allowing file attachments (drag-and-drop) and
+            <code>@mentions</code>.</li>
+    </ul>
+
+</body>
+
+</html>

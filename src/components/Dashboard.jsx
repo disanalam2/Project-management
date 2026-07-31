@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../App';
-import { LayoutDashboard, FileText, MessageSquare, LogOut, Users, Shield, Menu, X, Download } from 'lucide-react';
+import { LayoutDashboard, FileText, MessageSquare, LogOut, Users, Shield, Menu, X, Download, Code, Database, Briefcase } from 'lucide-react';
 import '../index.css';
 
 const Dashboard = () => {
@@ -108,6 +108,30 @@ const Dashboard = () => {
           >
             <Users size={20} />
             Members
+          </NavLink>
+          <NavLink 
+            to="/developer-handoffs" 
+            className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+            onClick={closeSidebar}
+          >
+            <Code size={20} />
+            Handoffs
+          </NavLink>
+          <NavLink 
+            to="/schemas" 
+            className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+            onClick={closeSidebar}
+          >
+            <Database size={20} />
+            Schemas
+          </NavLink>
+          <NavLink 
+            to="/work-distribution" 
+            className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+            onClick={closeSidebar}
+          >
+            <Briefcase size={20} />
+            Work Dist.
           </NavLink>
           <button 
             className="nav-item" 

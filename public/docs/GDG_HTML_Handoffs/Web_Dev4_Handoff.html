@@ -1,0 +1,132 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Dev4 Handoff</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background: #f9fbfd; }
+        .container { background: #fff; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1, h2, h3 { color: #2c3e50; }
+        h1 { border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        pre { background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto; font-family: 'Courier New', Courier, monospace; }
+        code { background: #ecf0f1; color: #c0392b; padding: 2px 5px; border-radius: 3px; }
+        pre code { background: transparent; color: inherit; padding: 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background: #f4f7f6; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Technical Specification &amp; Handoff: Web Frontend Developer 4 (Profile, Auth &amp; Settings)</h1>
+<p><strong>Developer Profile:</strong> Web Dev 4<br><strong>Working Directory:</strong> <code>web/src/app/dev4_profile_auth/</code><br><strong>Core Responsibilities:</strong> Global Authentication Flow, User Profile Settings, System Theming (Dark/Light), Notifications Panel, and Team Directory.
+<strong>Tech Stack:</strong> Next.js (App Router), React.js (JavaScript / <code>.jsx</code>), Vanilla CSS/Tailwind.</p>
+<p><strong>Objective:</strong> 
+This document provides the complete UI architecture, state management logic, component breakdown, and API integration contracts required to build your module. You are responsible for writing the actual implementation code. You hold a crucial role because the Global Authentication state you build will be used by every other frontend developer.</p>
+<hr>
+<h2>1. Zero-Conflict Architecture (Strict Rules)</h2>
+<p>To ensure your code never conflicts with the other Web developers, you must strictly follow this folder structure. <strong>Do not create files outside of <code>dev4_profile_auth/</code>.</strong></p>
+<pre><code class="language-text">web/src/app/dev4_profile_auth/
+├── auth/ (W31, W36)
+│   ├── api/
+│   ├── hooks/
+│   ├── components/
+│   └── LoginPage.jsx
+├── profile/ (W27-W30)
+│   ├── api/
+│   ├── components/
+│   └── ProfilePage.jsx
+└── communications_misc/ (W33-W35)
+    ├── api/
+    ├── components/
+    └── MiscPage.jsx
+</code></pre>
+<hr>
+<h2>2. Global Naming &amp; Data Integration Dictionary</h2>
+<p>To ensure your frontend connects perfectly with the Backend (Node.js/Express) developers, you MUST strictly use these exact JSON keys:</p>
+<ul>
+<li><strong>Identifiers:</strong> Always use <code>userId</code>, <code>roleId</code>. <strong>NEVER</strong> use <code>_id</code> directly in components without mapping it.</li>
+<li><strong>API Response Format:</strong> You must check <code>response.success</code> before using data:<ul>
+<li>Success: <code>{ &quot;success&quot;: true, &quot;data&quot;: { ... } }</code></li>
+<li>Error: <code>{ &quot;success&quot;: false, &quot;message&quot;: &quot;error string&quot; }</code></li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2>3. Feature Breakdown &amp; Component Logic</h2>
+<h3>Feature 1: Global Authentication Flow (W31, W36)</h3>
+<p>You are responsible for the Login screen and securely storing the JWT token. </p>
+<p><strong>Required Components (<code>auth/components/</code>):</strong></p>
+<ol>
+<li><strong><code>LoginForm.jsx</code> (W31):</strong><ul>
+<li><strong>Logic:</strong> Standard Email/Password login form.</li>
+<li><strong>API Connection:</strong> Submits <code>POST /api/users/login</code> (Backend Dev 1).</li>
+<li><strong>Post-Login:</strong> On success, extract the <code>token</code> and <code>user</code> object from the response. Save the token securely (e.g., in a secure cookie or local storage) and update the global Zustand/Context auth store. Finally, redirect to the Dashboard (<code>/dashboard</code>).</li>
+</ul>
+</li>
+<li><strong><code>ForgotPasswordModal.jsx</code> (W36):</strong><ul>
+<li><strong>Logic:</strong> Two-step flow. Step 1: Request OTP via email. Step 2: Verify OTP and set new password.</li>
+<li><strong>API Connection:</strong> <code>POST /api/users/forgot-password</code> and <code>POST /api/users/reset-password</code>.</li>
+</ul>
+</li>
+</ol>
+<h3>Feature 2: User Profile &amp; Settings (W27 - W30)</h3>
+<p>This module allows users to configure their app experience.</p>
+<p><strong>Required Components (<code>profile/components/</code>):</strong></p>
+<ol>
+<li><strong><code>UserProfileForm.jsx</code> (W27):</strong><ul>
+<li><strong>Logic:</strong> A form to view and edit personal details (Name, Phone, Bio, Profile Picture).</li>
+<li><strong>API Connection:</strong> Calls <code>GET /api/users/me</code> and <code>PUT /api/users/me</code>.</li>
+</ul>
+</li>
+<li><strong><code>SidebarNavigation.jsx</code> (W28):</strong><ul>
+<li><strong>Logic:</strong> You will build the global sidebar navigation shell. The routing links will point to URLs handled by other devs (e.g., <code>/tasks</code>, <code>/meetings</code>).</li>
+</ul>
+</li>
+<li><strong><code>ThemeToggle.jsx</code> (W29):</strong><ul>
+<li><strong>Logic:</strong> A switch to toggle between Dark Mode and Light Mode. This should append a <code>dark</code> class to the HTML <code>&lt;body&gt;</code> and save the preference in <code>localStorage</code>.</li>
+</ul>
+</li>
+<li><strong><code>DevModeSwitch.jsx</code> (W30):</strong><ul>
+<li><strong>Logic:</strong> A special toggle that reveals extra debugging information on the screen (only visible to Admins/Developers).</li>
+</ul>
+</li>
+</ol>
+<h3>Feature 3: Communications &amp; Misc (W33 - W35)</h3>
+<p>General community features.</p>
+<p><strong>Required Components (<code>communications_misc/components/</code>):</strong></p>
+<ol>
+<li><strong><code>NotificationBell.jsx</code> &amp; <code>NotificationDropdown.jsx</code> (W34):</strong><ul>
+<li><strong>Logic:</strong> A bell icon in the top Navbar. Shows an unread count badge. Clicking it opens a dropdown showing recent notifications.</li>
+<li><strong>API Connection:</strong> Calls <code>GET /api/notifications</code> (Backend Dev 4). Must support marking notifications as &quot;read&quot;.</li>
+</ul>
+</li>
+<li><strong><code>TeamDirectory.jsx</code> (W35):</strong><ul>
+<li><strong>Logic:</strong> A grid of user cards showing everyone in the organization.</li>
+<li><strong>API Connection:</strong> <code>GET /api/users/directory</code>. Should include search and filter-by-department functionality.</li>
+</ul>
+</li>
+<li><strong><code>TermsModal.jsx</code> (W33):</strong><ul>
+<li><strong>Logic:</strong> A simple static modal displaying Terms and Conditions.</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2>4. Cross-Team Integration Points (Crucial)</h2>
+<p>As a Web Frontend Developer, you need to use utilities built by others. Follow these strict rules to avoid bugs:</p>
+<h3>1. Global State Management (Zustand or Context)</h3>
+<ul>
+<li>You must create the <code>useAuthStore.js</code> (in the <code>shared/store/</code> folder) which holds the <code>user</code> and <code>token</code>. </li>
+<li>Other developers will rely heavily on your store to know who is logged in. Ensure it is bug-free and persists state across page reloads (using <code>zustand/middleware/persist</code> or similar).</li>
+</ul>
+<h3>2. Global API Client (<code>shared/api/apiClient.js</code>)</h3>
+<ul>
+<li>The project architect will create a shared <code>apiClient.js</code> (using Axios) in the <code>shared/</code> folder. This client will automatically attach the JWT token (that YOU saved) to every request. </li>
+<li><strong>You must import and use this client</strong> in your <code>api/</code> folders.</li>
+</ul>
+
+    </div>
+</body>
+</html>

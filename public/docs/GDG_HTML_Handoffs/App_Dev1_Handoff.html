@@ -1,0 +1,189 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Dev1 Handoff</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background: #f9fbfd; }
+        .container { background: #fff; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1, h2, h3 { color: #2c3e50; }
+        h1 { border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        pre { background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto; font-family: 'Courier New', Courier, monospace; }
+        code { background: #ecf0f1; color: #c0392b; padding: 2px 5px; border-radius: 3px; }
+        pre code { background: transparent; color: inherit; padding: 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background: #f4f7f6; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Technical Specification &amp; Handoff: App Developer 1 (Dashboard, Registry &amp; Leaves)</h1>
+<p><strong>Developer Profile:</strong> App Dev 1<br><strong>Working Directory:</strong> <code>app/lib/features/dev1_dashboard_registry/</code><br><strong>Core Responsibilities:</strong> Main Mobile Dashboard, Leave Application Flow, Document Repository, and Global Data Tables (Registry).
+<strong>Tech Stack:</strong> Flutter (Dart), Provider/Riverpod (State Management), Dio (API Client).</p>
+<p><strong>Objective:</strong> 
+This document provides the complete UI architecture, state management logic, widget breakdown, and API integration contracts required to build your module for iOS and Android. You are responsible for writing the actual implementation code. All edge cases and structures are defined below so you can work entirely independently without needing to consult the rest of the team.</p>
+<hr>
+<h2>1. Zero-Conflict Architecture (Strict Rules)</h2>
+<p>To ensure your code never conflicts with the 3 other Flutter developers, you must strictly follow this folder structure. <strong>Do not create files outside of <code>dev1_dashboard_registry/</code>.</strong></p>
+<pre><code class="language-text">app/lib/features/dev1_dashboard_registry/
+├── data/
+│   ├── models/       # Dart classes matching API JSON (e.g., dashboard_stats.dart)
+│   └── repository/   # API logic using Dio (e.g., dashboard_repository.dart)
+├── providers/        # State management (e.g., dashboard_provider.dart)
+├── screens/          # Full page views
+│   ├── DashboardScreen.dart
+│   ├── WorksTableScreen.dart
+│   ├── MeetingTableScreen.dart
+│   ├── LeavesScreen.dart
+│   └── RepoScreen.dart
+└── widgets/          # Reusable UI parts specific to your feature
+    ├── UpdatesGraph.dart
+    └── GlobalSearch.dart
+</code></pre>
+<hr>
+<h2>2. Global Naming &amp; Data Integration Dictionary</h2>
+<p>To ensure your mobile app connects perfectly with the Backend (Node.js/Express) developers, you MUST strictly use these exact JSON keys when serializing/deserializing Data Models:</p>
+<ul>
+<li><strong>Identifiers:</strong> Always map <code>userId</code>, <code>taskId</code>, <code>meetingId</code> correctly in your <code>.fromJson()</code> methods. <strong>NEVER</strong> use <code>_id</code> directly in UI.</li>
+<li><strong>Response Format:</strong> The backend will always respond with this structure. Ensure your repository layer checks <code>response[&#39;success&#39;]</code>:<ul>
+<li>Success: <code>{ &quot;success&quot;: true, &quot;data&quot;: { ... } }</code></li>
+<li>Error: <code>{ &quot;success&quot;: false, &quot;message&quot;: &quot;error string&quot; }</code></li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2>3. Feature Breakdown &amp; Widget Logic</h2>
+<h3>Feature 1: Main Dashboard (A01 - A07)</h3>
+<p>The Dashboard is the first screen the user sees after logging in. It&#39;s a ScrollView aggregating data from multiple APIs.</p>
+<p><strong>Required Widgets (<code>screens/DashboardScreen.dart</code> &amp; <code>widgets/</code>):</strong></p>
+<ol>
+<li><strong><code>WelcomeHeader</code> (A01):</strong><ul>
+<li><strong>Logic:</strong> Reads <code>user.name</code> from the global auth provider to display a greeting.</li>
+</ul>
+</li>
+<li><strong><code>StatsGrid</code> (A02):</strong><ul>
+<li><strong>Logic:</strong> A <code>GridView</code> displaying 4 summary cards.</li>
+<li><strong>Data Source:</strong> Calls <code>DashboardRepository.fetchStats()</code> which hits <code>GET /api/users/me/stats</code>.</li>
+</ul>
+</li>
+<li><strong><code>NextMeetingCard</code> (A03):</strong><ul>
+<li><strong>Logic:</strong> Highlights the upcoming meeting. Includes an <code>ElevatedButton</code> &quot;Join Now&quot; that deep links to the Meeting Screen.</li>
+</ul>
+</li>
+<li><strong><code>MyTasksList</code> (A04):</strong><ul>
+<li><strong>Logic:</strong> A condensed <code>ListView.builder</code> showing the top 3 high-priority tasks.</li>
+</ul>
+</li>
+<li><strong><code>FloatingQuickActions</code> (A05):</strong><ul>
+<li><strong>Logic:</strong> A custom <code>FloatingActionButton</code> or a row of circular icon buttons for rapid actions: &quot;Apply Leave&quot;, &quot;Create Task&quot;. These should open Bottom Sheets (<code>showModalBottomSheet</code>).</li>
+</ul>
+</li>
+<li><strong><code>UpdatesGraph</code> (A06):</strong><ul>
+<li><strong>Logic:</strong> Use a package like <code>fl_chart</code> to render a line/bar chart showing team activity.</li>
+</ul>
+</li>
+<li><strong><code>GlobalSearch</code> (A07):</strong><ul>
+<li><strong>Logic:</strong> A <code>TextField</code> at the top of the AppBar. Should use a <code>Debouncer</code> (300ms) before triggering <code>GET /api/users/directory?search=...</code>.</li>
+</ul>
+</li>
+</ol>
+<p><strong>Example Provider State (<code>providers/dashboard_provider.dart</code>):</strong></p>
+<pre><code class="language-dart">import &#39;package:flutter/material.dart&#39;;
+import &#39;../data/repository/dashboard_repository.dart&#39;;
+
+class DashboardProvider extends ChangeNotifier {
+  final DashboardRepository _repository = DashboardRepository();
+  
+  Map&lt;String, dynamic&gt;? stats;
+  bool isLoading = false;
+  String? errorMessage;
+
+  Future&lt;void&gt; loadDashboardData() async {
+    isLoading = true;
+    notifyListeners();
+
+    try {
+      final response = await _repository.fetchStats();
+      if (response[&#39;success&#39;] == true) {
+        stats = response[&#39;data&#39;];
+      } else {
+        errorMessage = response[&#39;message&#39;];
+      }
+    } catch (e) {
+      errorMessage = &quot;Network error occurred.&quot;;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+}
+</code></pre>
+<hr>
+<h3>Feature 2: Leave Application (A21)</h3>
+<p>This screen allows users to see their past leave requests and submit new ones via a Bottom Sheet or Dialog.</p>
+<p><strong>Required Widgets (<code>screens/LeavesScreen.dart</code>):</strong></p>
+<ol>
+<li><strong><code>LeavesListView</code>:</strong><ul>
+<li><strong>Logic:</strong> A list showing Date, Reason, and Status. Status should have color-coded Text/Icons (Green for <code>approved</code>, Red for <code>rejected</code>).</li>
+<li><strong>API Connection:</strong> <code>GET /api/leaves/my-leaves</code>.</li>
+</ul>
+</li>
+<li><strong><code>ApplyLeaveSheet</code>:</strong><ul>
+<li><strong>Logic:</strong> Uses <code>showDatePicker</code> for <code>startDate</code> and <code>endDate</code>.</li>
+<li><strong>API Connection:</strong> Submits a <code>POST</code> request to <code>/api/leaves</code>. Show a <code>SnackBar</code> on success and refresh the list.</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3>Feature 3: Essential Documents (A22)</h3>
+<p>A simple grid showing downloadable PDFs.</p>
+<p><strong>Required Widgets (<code>screens/RepoScreen.dart</code>):</strong></p>
+<ol>
+<li><strong><code>DocumentGrid</code>:</strong><ul>
+<li><strong>Logic:</strong> Displays a <code>GridView.builder</code> of documents.</li>
+<li><strong>Download Logic:</strong> Use the <code>url_launcher</code> package to open the S3 file link in the native mobile browser to trigger a download.</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3>Feature 4: Registry Tables (A19 - A20)</h3>
+<p>Since data tables are hard to view on mobile, you will implement these as highly optimized, searchable ListViews.</p>
+<p><strong>Required Widgets (<code>screens/WorksTableScreen.dart</code> &amp; <code>MeetingTableScreen.dart</code>):</strong></p>
+<ol>
+<li><strong><code>WorksListView</code> (A19):</strong><ul>
+<li><strong>Logic:</strong> A read-only, paginated <code>ListView</code> (implement infinite scrolling using a ScrollController) showing all completed tasks.</li>
+<li><strong>API Connection:</strong> <code>GET /api/tasks/registry?page=X</code>.</li>
+</ul>
+</li>
+<li><strong><code>MeetingsListView</code> (A20):</strong><ul>
+<li><strong>Logic:</strong> A list of past meetings showing attendees and a button to view MOM (Minutes of Meeting).</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2>4. Cross-Team Integration Points (Crucial)</h2>
+<p>As a Mobile Frontend Developer, you need to use utilities built by others. Follow these strict rules to avoid bugs:</p>
+<h3>1. Global API Client (<code>core/network/api_client.dart</code>)</h3>
+<ul>
+<li>Do <strong>NOT</strong> write raw <code>http.get</code> calls containing <code>Authorization: Bearer &lt;token&gt;</code> in your repository files.</li>
+<li>The project architect will create a shared <code>Dio</code> instance in the <code>lib/core/</code> folder containing an Interceptor that automatically attaches the JWT token. </li>
+<li><strong>You must import and use this Dio client</strong> in your <code>data/repository/</code> folders.</li>
+</ul>
+<h3>2. Global State (Authentication)</h3>
+<ul>
+<li>You do not need to write the Login Screen (App Dev 3 is doing that).</li>
+<li>However, your Dashboard needs to know <em>who</em> is logged in. You will consume the global <code>AuthProvider</code> to get the user&#39;s data.<pre><code class="language-dart">final user = Provider.of&lt;AuthProvider&gt;(context, listen: false).currentUser;
+</code></pre>
+</li>
+</ul>
+<h3>3. Shared UI Components</h3>
+<ul>
+<li>Use standard UI elements from the <code>lib/shared/widgets/</code> library (e.g., <code>CustomPrimaryButton</code>, <code>CustomTextField</code>) so that your module matches the Material 3 styling of the rest of the application perfectly.</li>
+</ul>
+
+    </div>
+</body>
+</html>

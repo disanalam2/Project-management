@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backend API Architecture Specification</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: #374151;
+            line-height: 1.6;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background-color: #ffffff;
+        }
+
+        h1 {
+            color: #111827;
+            font-size: 2.2rem;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #6b7280;
+            margin-bottom: 40px;
+        }
+
+        h2 {
+            color: #2563eb;
+            font-size: 1.75rem;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 10px;
+            margin-top: 50px;
+            margin-bottom: 20px;
+        }
+
+        h3 {
+            color: #111827;
+            font-size: 1.25rem;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        ul {
+            margin-top: 0;
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        code,
+        .badge {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            background-color: #fee2e2;
+            color: #dc2626;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            word-break: break-word;
+        }
+
+        .badge-blue {
+            background-color: #dbeafe;
+            color: #2563eb;
+        }
+
+        .badge-green {
+            background-color: #d1fae5;
+            color: #059669;
+        }
+
+        strong {
+            color: #111827;
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <h1>Backend API Architecture Specification</h1>
+
+    <p class="subtitle">
+        This document provides a comprehensive technical blueprint for the Backend Development team (e.g., Node.js,
+        Express, MongoDB). It defines the RESTful APIs, WebSockets, and business logic required to act as the common
+        engine for both the Mobile App (A01-A43) and Web Portal (W01-W43). <strong>(Updated Version v2.0)</strong>
+    </p>
+
+    <h2>1. Authentication & Users ( <code class="badge-blue">/api/users</code> )</h2>
+
+    <h3>API-01: User Login & Auth</h3>
+    <ul>
+        <li><strong>Method:</strong> <code>POST /api/users/login</code></li>
+        <li><strong>Models:</strong> <code>UserModel</code></li>
+        <li><strong>Logic:</strong> Authenticate via Email/Password (bcrypt) or Google OAuth. On success, generates a
+            JWT token embedding <code>_id</code> and <code>role_id</code>.</li>
+        <li><strong>Supports Frontend:</strong> A31, W31</li>
+    </ul>
+
+    <h3>API-02: Get User Profile & Dashboard Stats</h3>
+    <ul>
+        <li><strong>Method:</strong> <code>GET /api/users/profile</code></li>
+        <li><strong>Models:</strong> <code>UserModel</code>, <code>TaskModel</code>, <code>LeaveApplicationModel</code>,
+            <code>RoleModel</code></li>
+        <li><strong>Logic:</strong> Decodes the JWT. Returns user details, user's <code>RoleModel</code> and
+            <code>policies</code> (for UI RBAC), <code>task_count</code>, active tasks, and organization-wide stats
+            (total active members, members currently on leave).</li>
+        <li><strong>Supports Frontend:</strong> A01, A02, A05, W01, W02, W05, A27, W27</li>
+    </ul>
+
+    <h3>API-03: Team Directory & Global Search</h3>
+    <ul>
+        <li><strong>Method:</strong> <code>GET /api/users/directory</code> & <code>GET /api/search</code></li>
+        <li><strong>Models:</strong> <code>UserModel</code> (with aggregation on <code>TaskModel</code>,
+            <code>MeetingModel</code> for global search)</li>
+        <li><strong>Logic:</strong> Directory supports filtering by <code>batch</code> and <code>domain</code>. Global
+            search implements text-index searching across multiple collections to return categorized results.</li>
+        <li><strong>Supports Frontend:</strong> A07, A35, W07, W35</li>
+    </ul>
+
+    <h3>API-04: Forgot / Reset Password</h3>
+    <ul>
+        <li><strong>Method:</strong> <code>POST /api/users/forgot-password</code> &
+            <code>POST /api/users/reset-password</code></li>
+        <li><strong>Models:</strong> <code>UserModel</code></li>
+        <li><strong>Logic:</strong>
+            <ul>
+                <li><em>Forgot:</em> Generates a secure OTP/Token, saves it in the database under
+                    <code>UserModel.reset_token</code> along with an expiry timestamp, and sends it via Email service.
+                </li>
+                <li><em>Reset:</em> Verifies the submitted token against the database, and securely hashes the new
+                    password upon verification.</li>
+            </ul>
+        </li>
+        <li><strong>Supports Frontend:</strong> A36, W36</li>
+    </ul>
+
+    <h3>API-05: Bulk Member Upload (Admin)</h3>
+    <ul>
+        <li><strong>Method:</strong> <code>POST /api/users/bulk-upload</code></li>
+        <li><strong>Models:</strong> <code>UserModel</code></li>
+        <li><strong>Logic:</strong> Requires RBAC Admin Middleware. Parses uploaded CSV, hashes default passwords (or
+            triggers invite emails), and bulk inserts records using <code>insertMany</code>.</li>
+        <li><strong>Supports Frontend:</strong> A41, W41</li>
+    </ul>
+
+    <h3>API-06: Member Management (Admin)</h3>
+    <ul>
+        <li><strong>Method:</strong> <code>GET</code>, <code>PUT /api/users/:id</code></li>
+        <li><strong>Models:</strong> <code>UserModel</code></li>
+        <li><strong>Logic:</strong> Admins fetch all users for the management dashboard. PUT updates <code>status</code>
+            (make alumni), <code>volatile_data</code>, or <code>role_id</code>.</li>
+        <li><strong>Supports Frontend:</strong> A38, W38</li>
+    </ul>
+
+    <h2>2. Roles & IAM RBAC ( <code class="badge-blue">/api/iam</code> )</h2>
+
+    <h3>API-07: Manage Roles & Policies (SuperAdmin)</h3>
+    <ul>
+        <li><strong>Method:</strong> <code>GET</code>, <code>POST</code>, <code>PUT /api/iam/roles</code></li>
+        <li><strong>Models:</strong> <code>RoleModel</code>, <code>PolicyModel</code></li>
+        <li><strong>Logic:</strong> CRUD operations for dynamic roles.</li>
+        <li><strong>Middleware Note:</strong> A global RBAC Middleware must sit in front of all protected routes to
+            evaluate <code>PolicyModel.statements</code> against the requester's <code>role_id</code> before allowing
+            the request to proceed.</li>
+        <li><strong>Supports Frontend:</strong> A40, W40</li>
+    </ul>
+
+    <h2>3. Tasks Management ( <code class="badge-blue">/api/tasks</code> )</h2>
+
+    <h3>API-08: Fetch Tasks (List & Calendar)</h3>
+    <ul>
+        <li><strong>Method:</strong> <code>GET /api/tasks</code></li>
+        <li><strong>Models:</strong> <code>TaskModel</code></li>
+        <li><strong>Logic:</strong> Returns tasks filtered by <code>status</code>, <code>assigned_to</code>, or date
+            ranges (for rendering the calendar). Includes pagination.</li>
+        <li><strong>Supports Frontend:</strong> A04, A08, A09, A11, A19, W04, W08, W09, W11, W19</li>
+    </ul>
+
+    <h3>API-09: Create & Assign Task (Admin)</h3>
+    <ul>
+        <li><strong>Method:</strong> <code>POST</code>, <code>PUT /api/tasks/:id</code></li>
+        <li><strong>Models:</strong> <code>TaskModel</code>, <code>NotificationModel</code></li>
+        <li><strong>Logic:</strong> Validates payload (priority, attachments, <code>domain_id</code>). Saving or
+            updating the <code>assigned_to</code> array automatically triggers asynchronous creation of
+            <code>NotificationModel</code> records. Logs all changes to the <code>history</code> array for the Audit
+            Trail.</li>
+        <li><strong>Supports Frontend:</strong> A10, A13, W10, W13</li>
+    </ul>
+
+    <h3>API-10: Task Workflow (Accept/Submit/Review)</h3>
+    <ul>
+        <li><strong>Method:</strong> <code>POST /api/tasks/:id/action</code></li>
+        <li><strong>Models:</strong> <code>TaskModel</code></li>
+        <li><strong>Logic:</strong> Endpoint to handle 'accept', 'submit', and 'review' actions. Appends JSON data to
+            <code>submissions</code> or <code>reviews</code> arrays and updates <code>status</code>.</li>
+        <li><strong>Supports Frontend:</strong> A12, W12</li>
+    </ul>
+
+    <h2>4. Meetings & Attendance ( <code class="badge-blue">/api/meetings</code> )</h2>
+
+    <h3>API-11: Meeting Dashboard & Creation</h3>
+    <ul>
+        <li><strong>Method:</strong> <code>GET</code>, <code>POST /api/meetings</code></li>
+        <li><strong>Models:</strong> <code>MeetingModel</code></li>
+        <li><strong>Logic:</strong>
+            <ul>
+                <li><em>POST:</em> Create meeting validates RBAC. Requires mapping the creator's user ID to
+                    <code>created_by</code>.</li>
+                <li><em>GET:</em> Fetches meetings filtered by <code>status</code> (Upcoming/Ongoing/Completed).
+                    Crucially, the query MUST filter by <code>target_batch</code> and <code>target_domain</code> against
+                    the requesting user's profile to only return meetings that the user is authorized/targeted to see.
+                </li>
+            </ul>
+        </li>
+        <li><strong>Supports Frontend:</strong> A03, A14, A15, A16, W03, W14, W15, W16</li>
+    </ul>
+
+    <h3>API-12: Attendance & MOM Control</h3>
+    <ul>
+        <li><strong>Method:</strong> <code>GET</code>, <code>PUT /api/meetings/:id/attendance</code></li>
+        <li><strong>Models:</strong> <code>MeetingModel</code>, <code>AttendanceModel</code></li>
+        <li><strong>Logic:</strong> PUT: Admins update <code>mom_content</code> and batch update
+            <code>AttendanceModel</code> records (<code>is_present</code>, <code>reason_if_absent</code>). GET:
+            Aggregates attendance statistics for registry tables.</li>
+        <li><strong>Supports Frontend:</strong> A17, A18, A20, W17, W18, W20</li>
+    </ul>
+
+    <h2>5. Forms & Applications ( <code class="badge-blue">/api/forms</code> & <code
+            class="badge-blue">/api/leaves</code> )</h2>
+
+    <h3>API-13: Forms & Submissions</h3>
+    <ul>
+        <li><strong>Method:</strong> <code>GET</code>, <code>POST /api/forms</code>,
+            <code>POST /api/forms/:id/submit</code>, <code>GET /api/forms/:id/submissions</code></li>
+        <li><strong>Models:</strong> <code>FormModel</code>, <code>FormSubmissionModel</code></li>
+        <li><strong>Logic:</strong> GET fetches active forms. Submit route validates JSON against <code>fields</code>.
+            The submissions GET route fetches the aggregated <code>responses</code> JSON for Admin Dashboards.</li>
+        <li><strong>Supports Frontend:</strong> A23, A24, A25, A26, W23, W24, W25, W26</li>
+    </ul>
+
+    <h3>API-14: Leave Applications</h3>
+    <ul>
+        <li><strong>Method:</strong> <code>GET</code>, <code>POST</code>, <code>PUT /api/leaves</code></li>
+        <li><strong>Models:</strong> <code>LeaveApplicationModel</code>, <code>NotificationModel</code></li>
+        <li><strong>Logic:</strong> Users POST new leaves. Admins PUT to approve/reject, updating
+            <code>reviewed_by</code> and asynchronously triggering a notification to the applicant.</li>
+        <li><strong>Supports Frontend:</strong> A21, A39, W21, W39</li>
+    </ul>
+
+    <h2>6. Repository ( <code class="badge-blue">/api/repository</code> )</h2>
+
+    <h3>API-15: Upload & Fetch Assets</h3>
+    <ul>
+        <li><strong>Method:</strong> <code>GET</code>, <code>POST /api/repository</code></li>
+        <li><strong>Models:</strong> <code>RepositoryModel</code></li>
+        <li><strong>Logic:</strong> POST handles multipart file uploads (routing to AWS S3, Cloudinary, etc.) and saves
+            URLs. GET filters results using the <code>access_control</code> arrays against the requesting user's
+            <code>role_id</code> and <code>domain</code>.</li>
+        <li><strong>Supports Frontend:</strong> A22, A43, W22, W43</li>
+    </ul>
+
+    <h2>7. Chat & Real-Time (REST & WebSockets)</h2>
+
+    <h3>API-16: Chat Initialization</h3>
+    <ul>
+        <li><strong>Method:</strong> <code>GET /api/chat/channels</code> &
+            <code>GET /api/chat/messages/:channel_id</code></li>
+        <li><strong>Models:</strong> <code>ChannelModel</code>, <code>ChatModel</code></li>
+        <li><strong>Logic:</strong> Fetches user's accessible channels and historical messages for pagination.</li>
+        <li><strong>Supports Frontend:</strong> A42, W42</li>
+    </ul>
+
+    <p><strong>WebSocket Architecture (Socket.io Gateway):</strong> This defines the real-time event-driven architecture
+        for the Chat (A42/W42), Advanced Chat (A43/W43), and real-time App notifications.</p>
+
+    <h3>WS-01: Connection & Authentication</h3>
+    <ul>
+        <li><strong>Event:</strong> <code>connection</code> (Client → Server)</li>
+        <li><strong>Logic:</strong> Authenticates socket connection using JWT token in headers. Extracts
+            <code>user_id</code> and attaches it to the socket instance. Automatically subscribes user to their private
+            room (e.g., <code>user_id_123</code>) for direct notifications.</li>
+        <li><strong>Response:</strong> <code>connected</code> (Server → Client)</li>
+    </ul>
+
+    <h3>WS-02: Join / Leave Channel (Room)</h3>
+    <ul>
+        <li><strong>Event:</strong> <code>join_channel</code> (Client → Server)</li>
+        <li><strong>Payload:</strong> <code>{ channel_id: string }</code></li>
+        <li><strong>Logic:</strong> Server verifies if the user has access to <code>channel_id</code> (via
+            <code>ChannelModel</code>). Subscribes the user's socket to the <code>channel_id</code> room.</li>
+        <li><strong>Response:</strong> <code>user_joined</code> (Server → Room) broadcasting
+            <code>{ user_id, name, timestamp }</code>.</li>
+    </ul>
+
+    <h3>WS-03: Send Message (Core Chat & Advanced)</h3>
+    <ul>
+        <li><strong>Event:</strong> <code>send_message</code> (Client → Server)</li>
+        <li><strong>Payload:</strong> <code>{ channel_id: string, text: string, attachments: array }</code></li>
+        <li><strong>Logic:</strong>
+            <ol>
+                <li>Validates payload (text size, attachment limits).</li>
+                <li>Saves the message into the <code>ChatModel</code> database.</li>
+                <li>Triggers targeted push notifications via FCM/APNS if <code>@mentions</code> exist (using
+                    <code>NotificationModel</code>).</li>
+            </ol>
+        </li>
+        <li><strong>Response:</strong> <code>receive_message</code> (Server → Room) broadcasting the newly saved message
+            object to everyone in that channel in real-time.</li>
+    </ul>
+
+    <h3>WS-04: Typing Indicators</h3>
+    <ul>
+        <li><strong>Event:</strong> <code>typing_start</code> / <code>typing_stop</code> (Client → Server)</li>
+        <li><strong>Payload:</strong> <code>{ channel_id: string }</code></li>
+        <li><strong>Response:</strong> <code>user_typing</code> (Server → Room) broadcasting
+            <code>{ user_id, name, is_typing: boolean }</code> so frontend can show "User is typing...".</li>
+    </ul>
+
+    <h3>WS-05: Real-Time Notifications</h3>
+    <ul>
+        <li><strong>Event:</strong> Server-Side internal trigger (No Client Emit)</li>
+        <li><strong>Logic:</strong> When a task is assigned, leave is approved, or someone is mentioned, the server will
+            emit an event directly to a specific user's private socket room.</li>
+        <li><strong>Response:</strong> <code>new_notification</code> (Server → Specific Client) broadcasting the
+            <code>NotificationModel</code> object to trigger an in-app popup/bell ring immediately without refresh.</li>
+        <li><strong>Supports Frontend:</strong> A34, W34</li>
+    </ul>
+
+    <h2>8. Notifications & Community Updates ( <code class="badge-blue">/api/notifications</code>, <code
+            class="badge-blue">/api/updates</code> )</h2>
+
+    <h3>API-17: Fetch & Mark Read (Notifications)</h3>
+    <ul>
+        <li><strong>Method:</strong> <code>GET</code>, <code>PUT /api/notifications</code></li>
+        <li><strong>Models:</strong> <code>NotificationModel</code></li>
+        <li><strong>Logic:</strong> Fetches user's alerts. PUT marks specific or all notifications as
+            <code>is_read: true</code>.</li>
+        <li><strong>Supports Frontend:</strong> A34, W34</li>
+    </ul>
+
+    <h3>API-18: Manage Community Updates</h3>
+    <ul>
+        <li><strong>Method:</strong> <code>GET</code>, <code>POST /api/updates</code></li>
+        <li><strong>Models:</strong> <code>UpdatesModel</code></li>
+        <li><strong>Logic:</strong> GET fetches the latest internal updates for the Dashboard. POST allows Admins to
+            broadcast new updates.</li>
+        <li><strong>Supports Frontend:</strong> A06, W06</li>
+    </ul>
+
+    <h2>9. Analytics & Admin Dashboard ( <code class="badge-blue">/api/analytics</code> )</h2>
+
+    <h3>API-19: Analytics & Admin Dashboard</h3>
+    <ul>
+        <li><strong>Method:</strong> <code>GET /api/analytics</code></li>
+        <li><strong>Models:</strong> <code>TaskModel</code>, <code>UserModel</code>, <code>LeaveApplicationModel</code>
+        </li>
+        <li><strong>Logic:</strong> Runs MongoDB aggregation pipelines to calculate Dashboard graphs (Task Load Graph by
+            status & domain) and Admin Dashboard high-level metrics (total active, alumni, etc.). Requires Admin/Manager
+            RBAC.</li>
+        <li><strong>Supports Frontend:</strong> A06, A37, W06, W37</li>
+    </ul>
+
+</body>
+
+</html>

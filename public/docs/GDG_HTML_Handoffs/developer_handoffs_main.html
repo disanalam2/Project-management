@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Developer Handoffs</title>
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Inter', -apple-system, sans-serif; display: flex; flex-direction: column; background: #fff; }
+        .topbar { padding: 15px 20px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 15px; }
+        .topbar select { padding: 8px 12px; font-size: 1rem; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; background: white; cursor: pointer; min-width: 250px; }
+        .topbar select:hover { border-color: #94a3b8; }
+        .topbar label { color: #1e293b; }
+        iframe { flex: 1; border: none; width: 100%; }
+        .placeholder { display: flex; flex: 1; align-items: center; justify-content: center; color: #94a3b8; font-size: 1.2rem; }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <label for="dev-select"><strong>Select Developer:</strong></label>
+        <select id="dev-select" onchange="loadContent(this.value)">
+            <option value="" disabled selected>-- Select a Developer Handoff --</option>
+            <optgroup label="App Developers">
+                <option value="App_Dev1_Handoff.html">App Dev 1</option>
+                <option value="App_Dev2_Handoff.html">App Dev 2</option>
+                <option value="App_Dev3_Handoff.html">App Dev 3</option>
+                <option value="App_Dev4_Handoff.html">App Dev 4</option>
+            </optgroup>
+            <optgroup label="Backend Developers">
+                <option value="Backend_Dev1_Handoff.html">Backend Dev 1</option>
+                <option value="Backend_Dev2_Handoff.html">Backend Dev 2</option>
+                <option value="Backend_Dev3_Handoff.html">Backend Dev 3</option>
+                <option value="Backend_Dev4_Handoff.html">Backend Dev 4</option>
+            </optgroup>
+            <optgroup label="Web Developers">
+                <option value="Web_Dev1_Handoff.html">Web Dev 1</option>
+                <option value="Web_Dev2_Handoff.html">Web Dev 2</option>
+                <option value="Web_Dev3_Handoff.html">Web Dev 3</option>
+                <option value="Web_Dev4_Handoff.html">Web Dev 4</option>
+                <option value="Web_Dev5_Handoff.html">Web Dev 5</option>
+            </optgroup>
+        </select>
+    </div>
+    <div id="placeholder" class="placeholder">Please select a developer from the dropdown above.</div>
+    <iframe id="doc-frame" src="" style="display: none;"></iframe>
+
+    <script>
+        function loadContent(value) {
+            if (value) {
+                document.getElementById('placeholder').style.display = 'none';
+                const frame = document.getElementById('doc-frame');
+                frame.style.display = 'block';
+                frame.src = value;
+            }
+        }
+    </script>
+</body>
+</html>

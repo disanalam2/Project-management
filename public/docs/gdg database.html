@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Schema - GDG Management Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            background-color: #ffffff;
+            color: #333333;
+            padding: 40px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: #ea4335;
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .header h1 span.blue {
+            color: #4285f4;
+        }
+
+        .header h1 span.yellow {
+            color: #fbbc05;
+        }
+
+        .header h1 span.green {
+            color: #34a853;
+        }
+
+        .header h2 {
+            color: #111827;
+            margin-top: 0;
+            font-size: 1.5em;
+        }
+
+        .header p {
+            color: #6b7280;
+            font-size: 1.1em;
+        }
+
+        hr {
+            border: 0;
+            height: 1px;
+            background: #e5e7eb;
+            margin-bottom: 30px;
+        }
+
+        .intro {
+            margin-bottom: 40px;
+            font-size: 1.05em;
+            color: #4b5563;
+        }
+
+        h3 {
+            color: #2563eb;
+            font-size: 1.3em;
+            margin-top: 40px;
+            border-bottom: 2px solid #2563eb;
+            display: inline-block;
+            padding-bottom: 4px;
+            margin-bottom: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th,
+        td {
+            padding: 12px 10px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background-color: #f9fafb;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 1px solid #d1d5db;
+            border-top: 1px solid #d1d5db;
+        }
+
+        td {
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        td:first-child {
+            font-weight: 600;
+            color: #111827;
+            width: 25%;
+        }
+
+        td:nth-child(2) {
+            color: #dc2626;
+            width: 20%;
+            font-family: monospace;
+            font-size: 1.05em;
+        }
+
+        td:last-child {
+            color: #4b5563;
+            width: 55%;
+        }
+
+        .footer {
+            margin-top: 60px;
+            text-align: center;
+            color: #9ca3af;
+            font-size: 0.9em;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <h1><span class="blue">G</span><span class="red">o</span><span class="yellow">o</span><span
+                class="blue">g</span><span class="green">l</span><span class="red">e</span> Developer Groups</h1>
+        <h2>Management Portal - Database Schema</h2>
+        <p>GDG On Campus . HIT</p>
+    </div>
+
+    <hr>
+
+    <p class="intro">This document outlines the complete database models and schema architecture for the GDG Management
+        Portal.</p>
+
+    <h3>1. Usermodel</h3>
+    <table>
+        <tr>
+            <th>Field Name</th>
+            <th>Type</th>
+            <th>Description & Requirement Reference</th>
+        </tr>
+        <tr>
+            <td>_id</td>
+            <td>String</td>
+            <td>MongoDB Primary Key (Normalized). Unique identifier for the user. (Required)</td>
+        </tr>
+        <tr>
+            <td>name</td>
+            <td>String</td>
+            <td>Full name of the member.</td>
+        </tr>
+        <tr>
+            <td>email</td>
+            <td>String</td>
+            <td>Contact email address.</td>
+        </tr>
+        <tr>
+            <td>phone</td>
+            <td>String</td>
+            <td>Contact phone number.</td>
+        </tr>
+        <tr>
+            <td>password</td>
+            <td>String (Hashed)</td>
+            <td>For Email/Password login.</td>
+        </tr>
+        <tr>
+            <td>auth_provider</td>
+            <td>String</td>
+            <td>Authentication source, e.g., 'local', 'google'.</td>
+        </tr>
+        <tr>
+            <td>profile_pic</td>
+            <td>String (URL)</td>
+            <td>Profile picture URL.</td>
+        </tr>
+        <tr>
+            <td>domain</td>
+            <td>String</td>
+            <td>Assigned technical domain, e.g., WEB_DEV, APP_DEV.</td>
+        </tr>
+        <tr>
+            <td>role_id</td>
+            <td>String</td>
+            <td>Reference to RoleModel for dynamic IAM RBAC</td>
+        </tr>
+        <tr>
+            <td>batch</td>
+            <td>String</td>
+            <td>Graduation batch year for filtering.</td>
+        </tr>
+        <tr>
+            <td>status</td>
+            <td>String</td>
+            <td>'active', 'alumni', or 'inactive'.</td>
+        </tr>
+        <tr>
+            <td>task_count</td>
+            <td>Number</td>
+            <td>Count of lifetime tasks completed.</td>
+        </tr>
+        <tr>
+            <td>volatile_data</td>
+            <td>JSON</td>
+            <td>Flexible storage for frequently changing metadata.</td>
+        </tr>
+        <tr>
+            <td>reset_token</td>
+            <td>String</td>
+            <td>Secure token for Forgot Password flow.</td>
+        </tr>
+        <tr>
+            <td>reset_token_expiry</td>
+            <td>DateTime</td>
+            <td>Expiry timestamp for the reset token.</td>
+        </tr>
+        <tr>
+            <td>created_at</td>
+            <td>DateTime</td>
+            <td>Timestamp of account creation.</td>
+        </tr>
+        <tr>
+            <td>updated_at</td>
+            <td>DateTime</td>
+            <td>Timestamp of last profile update.</td>
+        </tr>
+    </table>
+
+    <h3>2. RoleModel (IAM RBAC)</h3>
+    <table>
+        <tr>
+            <th>Field Name</th>
+            <th>Type</th>
+            <th>Description & Requirement Reference</th>
+        </tr>
+        <tr>
+            <td>_id</td>
+            <td>String</td>
+            <td>MongoDB Primary Key (Normalized). (e.g., 'ROLE_DOMAIN_HEAD')</td>
+        </tr>
+        <tr>
+            <td>name</td>
+            <td>String</td>
+            <td>Human-readable role name.</td>
+        </tr>
+        <tr>
+            <td>description</td>
+            <td>String</td>
+            <td>Brief explanation of the role's purpose.</td>
+        </tr>
+        <tr>
+            <td>policies</td>
+            <td>Array[String]</td>
+            <td>List of associated Policy IDs.</td>
+        </tr>
+    </table>
+
+    <h3>3. PolicyModel (IAM RBAC)</h3>
+    <table>
+        <tr>
+            <th>Field Name</th>
+            <th>Type</th>
+            <th>Description & Requirement Reference</th>
+        </tr>
+        <tr>
+            <td>_id</td>
+            <td>String</td>
+            <td>MongoDB Primary Key. (e.g., 'POLICY_DOMAIN_MANAGEMENT')</td>
+        </tr>
+        <tr>
+            <td>version</td>
+            <td>String</td>
+            <td>Policy version.</td>
+        </tr>
+        <tr>
+            <td>statements</td>
+            <td>Array[JSON]</td>
+            <td>Format: { effect, actions[], resource }. Allows dynamic interpolation.</td>
+        </tr>
+    </table>
+
+    <h3>4. Taskmodel</h3>
+    <table>
+        <tr>
+            <th>Field Name</th>
+            <th>Type</th>
+            <th>Description & Requirement Reference</th>
+        </tr>
+        <tr>
+            <td>_id</td>
+            <td>String</td>
+            <td>MongoDB Primary Key (Normalized).</td>
+        </tr>
+        <tr>
+            <td>name</td>
+            <td>String</td>
+            <td>Title of the assigned task.</td>
+        </tr>
+        <tr>
+            <td>domain_id</td>
+            <td>String</td>
+            <td>Associated technical domain.</td>
+        </tr>
+        <tr>
+            <td>description</td>
+            <td>String</td>
+            <td>Detailed instructions for the task.</td>
+        </tr>
+        <tr>
+            <td>type</td>
+            <td>String</td>
+            <td>'team' or 'individual'.</td>
+        </tr>
+        <tr>
+            <td>priority</td>
+            <td>String</td>
+            <td>e.g., 'high', 'medium', 'low'.</td>
+        </tr>
+        <tr>
+            <td>created_by</td>
+            <td>String</td>
+            <td>User ID of the task creator.</td>
+        </tr>
+        <tr>
+            <td>assigned_to</td>
+            <td>Array[String]</td>
+            <td>Array of user IDs assigned to this task.</td>
+        </tr>
+        <tr>
+            <td>mentor_ids</td>
+            <td>Array[String]</td>
+            <td>Array of User IDs for supervising mentors.</td>
+        </tr>
+        <tr>
+            <td>deadline</td>
+            <td>DateTime</td>
+            <td>Task submission deadline.</td>
+        </tr>
+        <tr>
+            <td>status</td>
+            <td>String</td>
+            <td>'not_started', 'in_progress', 'completed', etc.</td>
+        </tr>
+        <tr>
+            <td>submissions</td>
+            <td>Array[JSON]</td>
+            <td>Format: [{ submitted_by, submission_link, submitted_at }].</td>
+        </tr>
+        <tr>
+            <td>reviews</td>
+            <td>Array[JSON]</td>
+            <td>Format: [{ reviewed_by, remarks, rating }].</td>
+        </tr>
+        <tr>
+            <td>history</td>
+            <td>Array[JSON]</td>
+            <td>Audit log of creations, reassignments, etc.</td>
+        </tr>
+        <tr>
+            <td>attachments</td>
+            <td>Array[JSON]</td>
+            <td>Format: [{ name, url }] for attached files.</td>
+        </tr>
+        <tr>
+            <td>created_at</td>
+            <td>DateTime</td>
+            <td>Timestamp of creation.</td>
+        </tr>
+    </table>
+
+    <h3>5. Meetingmodel</h3>
+    <table>
+        <tr>
+            <th>Field Name</th>
+            <th>Type</th>
+            <th>Description & Requirement Reference</th>
+        </tr>
+        <tr>
+            <td>_id</td>
+            <td>String</td>
+            <td>MongoDB Primary Key (Normalized).</td>
+        </tr>
+        <tr>
+            <td>title</td>
+            <td>String</td>
+            <td>Title of the meeting.</td>
+        </tr>
+        <tr>
+            <td>agenda</td>
+            <td>String</td>
+            <td>Meeting agenda and discussion points.</td>
+        </tr>
+        <tr>
+            <td>date_time</td>
+            <td>DateTime</td>
+            <td>Scheduled date and time.</td>
+        </tr>
+        <tr>
+            <td>venue</td>
+            <td>JSON</td>
+            <td>Format: { type: 'online'|'offline', location: string|null, link: string|null }.</td>
+        </tr>
+        <tr>
+            <td>target_batch</td>
+            <td>Array[String]</td>
+            <td>Target batch years for filtering.</td>
+        </tr>
+        <tr>
+            <td>target_domain</td>
+            <td>Array[String]</td>
+            <td>Target domains for filtering.</td>
+        </tr>
+        <tr>
+            <td>status</td>
+            <td>String</td>
+            <td>'upcoming', 'ongoing', 'completed'.</td>
+        </tr>
+        <tr>
+            <td>mom_content</td>
+            <td>String</td>
+            <td>Minutes of Meeting notes.</td>
+        </tr>
+        <tr>
+            <td>created_by</td>
+            <td>String</td>
+            <td>Admin/User ID who created the meeting.</td>
+        </tr>
+    </table>
+
+    <h3>6. LeaveApplicationModel</h3>
+    <table>
+        <tr>
+            <th>Field Name</th>
+            <th>Type</th>
+            <th>Description & Requirement Reference</th>
+        </tr>
+        <tr>
+            <td>_id</td>
+            <td>String</td>
+            <td>MongoDB Primary Key (Normalized).</td>
+        </tr>
+        <tr>
+            <td>user_id</td>
+            <td>String</td>
+            <td>User ID of the applicant.</td>
+        </tr>
+        <tr>
+            <td>leave_type</td>
+            <td>String</td>
+            <td>'period', 'meeting', or 'task'.</td>
+        </tr>
+        <tr>
+            <td>target</td>
+            <td>JSON</td>
+            <td>{ type: 'meeting'|'task', id: string } or null.</td>
+        </tr>
+        <tr>
+            <td>duration</td>
+            <td>JSON</td>
+            <td>{ start_date: date, end_date: date } or null.</td>
+        </tr>
+        <tr>
+            <td>reason</td>
+            <td>String</td>
+            <td>Reason provided by the applicant.</td>
+        </tr>
+        <tr>
+            <td>status</td>
+            <td>String</td>
+            <td>'pending', 'approved', 'rejected'.</td>
+        </tr>
+        <tr>
+            <td>reviewed_by</td>
+            <td>String</td>
+            <td>Admin ID who processed the application.</td>
+        </tr>
+    </table>
+
+    <h3>7. Repositorymodel</h3>
+    <table>
+        <tr>
+            <th>Field Name</th>
+            <th>Type</th>
+            <th>Description & Requirement Reference</th>
+        </tr>
+        <tr>
+            <td>_id</td>
+            <td>String</td>
+            <td>MongoDB Primary Key (Normalized).</td>
+        </tr>
+        <tr>
+            <td>name</td>
+            <td>String</td>
+            <td>Name of the document or asset.</td>
+        </tr>
+        <tr>
+            <td>type</td>
+            <td>String</td>
+            <td>'document', 'GD', 'VD'.</td>
+        </tr>
+        <tr>
+            <td>file_urls</td>
+            <td>Array[String]</td>
+            <td>Direct storage URLs (Supports multiple files).</td>
+        </tr>
+        <tr>
+            <td>description</td>
+            <td>String</td>
+            <td>Brief description of the asset.</td>
+        </tr>
+        <tr>
+            <td>access_control</td>
+            <td>JSON</td>
+            <td>Format: { is_public: boolean, allowed_roles: [], allowed_domains: [] }</td>
+        </tr>
+        <tr>
+            <td>uploaded_by</td>
+            <td>String</td>
+            <td>Admin/User ID who uploaded the asset.</td>
+        </tr>
+        <tr>
+            <td>uploaded_at</td>
+            <td>DateTime</td>
+            <td>Timestamp of upload.</td>
+        </tr>
+    </table>
+
+    <h3>8. FormModel</h3>
+    <table>
+        <tr>
+            <th>Field Name</th>
+            <th>Type</th>
+            <th>Description & Requirement Reference</th>
+        </tr>
+        <tr>
+            <td>_id</td>
+            <td>String</td>
+            <td>MongoDB Primary Key (Normalized).</td>
+        </tr>
+        <tr>
+            <td>title</td>
+            <td>String</td>
+            <td>Title of the dynamic form.</td>
+        </tr>
+        <tr>
+            <td>instructions</td>
+            <td>String</td>
+            <td>Form instructions.</td>
+        </tr>
+        <tr>
+            <td>fields</td>
+            <td>Array[JSON]</td>
+            <td>Definitions of input fields.</td>
+        </tr>
+        <tr>
+            <td>deadline</td>
+            <td>DateTime</td>
+            <td>Form expiration date.</td>
+        </tr>
+        <tr>
+            <td>created_by</td>
+            <td>String</td>
+            <td>Admin ID who created the form.</td>
+        </tr>
+        <tr>
+            <td>created_at</td>
+            <td>DateTime</td>
+            <td>Timestamp.</td>
+        </tr>
+    </table>
+
+    <h3>9. FormSubmissionModel</h3>
+    <table>
+        <tr>
+            <th>Field Name</th>
+            <th>Type</th>
+            <th>Description & Requirement Reference</th>
+        </tr>
+        <tr>
+            <td>_id</td>
+            <td>String</td>
+            <td>MongoDB Primary Key (Normalized).</td>
+        </tr>
+        <tr>
+            <td>form_id</td>
+            <td>String</td>
+            <td>Reference to FormModel.</td>
+        </tr>
+        <tr>
+            <td>user_id</td>
+            <td>String</td>
+            <td>Reference to Usermodel.</td>
+        </tr>
+        <tr>
+            <td>responses</td>
+            <td>JSON</td>
+            <td>Key-value pairs of the user's answers.</td>
+        </tr>
+        <tr>
+            <td>submitted_at</td>
+            <td>DateTime</td>
+            <td>Timestamp.</td>
+        </tr>
+    </table>
+
+    <h3>10. UpdatesModel</h3>
+    <table>
+        <tr>
+            <th>Field Name</th>
+            <th>Type</th>
+            <th>Description & Requirement Reference</th>
+        </tr>
+        <tr>
+            <td>_id</td>
+            <td>String</td>
+            <td>MongoDB Primary Key (Normalized).</td>
+        </tr>
+        <tr>
+            <td>title</td>
+            <td>String</td>
+            <td>Headline for the community update.</td>
+        </tr>
+        <tr>
+            <td>content</td>
+            <td>String</td>
+            <td>Full text content.</td>
+        </tr>
+        <tr>
+            <td>author_id</td>
+            <td>String</td>
+            <td>Admin ID.</td>
+        </tr>
+        <tr>
+            <td>created_at</td>
+            <td>DateTime</td>
+            <td>Timestamp.</td>
+        </tr>
+    </table>
+
+    <h3>11. ChannelModel</h3>
+    <table>
+        <tr>
+            <th>Field Name</th>
+            <th>Type</th>
+            <th>Description & Requirement Reference</th>
+        </tr>
+        <tr>
+            <td>_id</td>
+            <td>String</td>
+            <td>MongoDB Primary Key (Normalized).</td>
+        </tr>
+        <tr>
+            <td>name</td>
+            <td>String</td>
+            <td>Name of the group.</td>
+        </tr>
+        <tr>
+            <td>type</td>
+            <td>String</td>
+            <td>'domain_group' or 'all_team_group'.</td>
+        </tr>
+        <tr>
+            <td>members</td>
+            <td>Array[String]</td>
+            <td>(Optional) List of user IDs.</td>
+        </tr>
+        <tr>
+            <td>created_at</td>
+            <td>DateTime</td>
+            <td>Timestamp of group creation.</td>
+        </tr>
+    </table>
+
+    <h3>12. ChatModel</h3>
+    <table>
+        <tr>
+            <th>Field Name</th>
+            <th>Type</th>
+            <th>Description & Requirement Reference</th>
+        </tr>
+        <tr>
+            <td>_id</td>
+            <td>String</td>
+            <td>MongoDB Primary Key (Normalized).</td>
+        </tr>
+        <tr>
+            <td>sender_id</td>
+            <td>String</td>
+            <td>Reference to Usermodel.</td>
+        </tr>
+        <tr>
+            <td>channel_id</td>
+            <td>String</td>
+            <td>Ref to ChannelModel.</td>
+        </tr>
+        <tr>
+            <td>text</td>
+            <td>String</td>
+            <td>Content of the chat message.</td>
+        </tr>
+        <tr>
+            <td>attachments</td>
+            <td>Array[JSON]</td>
+            <td>Attached files, e.g., [{ name, url }].</td>
+        </tr>
+        <tr>
+            <td>mentions</td>
+            <td>Array[String]</td>
+            <td>Array of user _ids tagged in the message.</td>
+        </tr>
+        <tr>
+            <td>timestamp</td>
+            <td>DateTime</td>
+            <td>Time the message was sent.</td>
+        </tr>
+    </table>
+
+    <h3>13. NotificationModel</h3>
+    <table>
+        <tr>
+            <th>Field Name</th>
+            <th>Type</th>
+            <th>Description & Requirement Reference</th>
+        </tr>
+        <tr>
+            <td>_id</td>
+            <td>String</td>
+            <td>MongoDB Primary Key (Normalized).</td>
+        </tr>
+        <tr>
+            <td>user_id</td>
+            <td>String</td>
+            <td>Reference to Usermodel (Recipient).</td>
+        </tr>
+        <tr>
+            <td>title</td>
+            <td>String</td>
+            <td>Brief title.</td>
+        </tr>
+        <tr>
+            <td>message</td>
+            <td>String</td>
+            <td>Full notification text.</td>
+        </tr>
+        <tr>
+            <td>type</td>
+            <td>String</td>
+            <td>Notification type categorization.</td>
+        </tr>
+        <tr>
+            <td>is_read</td>
+            <td>Boolean</td>
+            <td>Status of the notification.</td>
+        </tr>
+        <tr>
+            <td>action_link</td>
+            <td>String</td>
+            <td>URL to redirect the user upon clicking.</td>
+        </tr>
+        <tr>
+            <td>created_at</td>
+            <td>DateTime</td>
+            <td>Time generated.</td>
+        </tr>
+    </table>
+
+    <h3>14. AttendanceModel</h3>
+    <table>
+        <tr>
+            <th>Field Name</th>
+            <th>Type</th>
+            <th>Description & Requirement Reference</th>
+        </tr>
+        <tr>
+            <td>_id</td>
+            <td>String</td>
+            <td>MongoDB Primary Key.</td>
+        </tr>
+        <tr>
+            <td>meeting_id</td>
+            <td>String</td>
+            <td>Reference to MeetingModel.</td>
+        </tr>
+        <tr>
+            <td>user_id</td>
+            <td>String</td>
+            <td>Reference to UserModel.</td>
+        </tr>
+        <tr>
+            <td>is_present</td>
+            <td>Boolean</td>
+            <td>Whether the user attended.</td>
+        </tr>
+        <tr>
+            <td>reason_if_absent</td>
+            <td>String</td>
+            <td>Optional reason if missed.</td>
+        </tr>
+        <tr>
+            <td>marked_at</td>
+            <td>DateTime</td>
+            <td>Timestamp when attendance was recorded.</td>
+        </tr>
+    </table>
+
+    <div class="footer">
+        Prepared for GDG On Campus HIT | Technical Architecture Final Draft (V2.0 Normalized)
+    </div>
+
+</body>
+
+</html>

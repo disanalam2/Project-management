@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GDG Management Portal - Feature Overview (For PR & Product Team)</title>
+    <style>
+        :root {
+            --primary: #4285F4;
+            /* Google Blue */
+            --secondary: #34A853;
+            /* Google Green */
+            --accent: #EA4335;
+            /* Google Red */
+            --yellow: #FBBC05;
+            /* Google Yellow */
+            --dark: #202124;
+            --text-gray: #5f6368;
+            --light-bg: #f8f9fa;
+            --border: #dadce0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            color: var(--dark);
+            line-height: 1.6;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background-color: #ffffff;
+        }
+
+        .header {
+            text-align: center;
+            padding: 60px 0;
+            border-bottom: 2px solid var(--border);
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: var(--primary);
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+        }
+
+        .header h2 {
+            color: var(--text-gray);
+            font-weight: 400;
+            font-size: 1.4rem;
+        }
+
+        .intro {
+            font-size: 1.15rem;
+            color: var(--text-gray);
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .feature-section {
+            margin-bottom: 40px;
+            background: var(--light-bg);
+            border-radius: 12px;
+            padding: 30px;
+            border: 1px solid var(--border);
+            page-break-inside: avoid;
+        }
+
+        .feature-section h3 {
+            color: var(--primary);
+            font-size: 1.6rem;
+            margin-top: 0;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 10px;
+            display: inline-block;
+        }
+
+        .feature-list {
+            list-style-type: none;
+            padding: 0;
+            margin-top: 20px;
+        }
+
+        .feature-list li {
+            margin-bottom: 15px;
+            padding-left: 30px;
+            position: relative;
+        }
+
+        .feature-list li::before {
+            content: "✓";
+            color: var(--secondary);
+            font-weight: bold;
+            font-size: 1.2rem;
+            position: absolute;
+            left: 0;
+            top: -2px;
+        }
+
+        .feature-title {
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 1.1rem;
+        }
+
+        /* Print Specific Styles */
+        @media print {
+            body {
+                padding: 0;
+            }
+
+            .feature-section {
+                background: none;
+                border: 1px solid #ccc;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <h1>GDG Management Portal</h1>
+        <h2>Product Feature Overview</h2>
+    </div>
+
+    <div class="intro">
+        <p>This document highlights all the core features and capabilities of the upcoming GDG Management Portal. It is
+            written in simple, non-technical language to help the PR, Marketing, and Product teams understand exactly
+            what the application does and how it benefits our community.</p>
+    </div>
+
+    <!-- 1. Dashboard -->
+    <div class="feature-section">
+        <h3>1. Smart Dashboard & Quick Access</h3>
+        <ul class="feature-list">
+            <li><span class="feature-title">Personalized Greetings:</span> The app welcomes users with a personalized
+                message based on the time of day.</li>
+            <li><span class="feature-title">Community Snapshot:</span> Instantly see how many members are active, how
+                many are alumni, and who is currently on leave.</li>
+            <li><span class="feature-title">Quick Action Buttons:</span> Smart shortcuts that change based on your role
+                (e.g., normal members see "Apply Leave", while admins see "Assign Task").</li>
+            <li><span class="feature-title">Global Search:</span> A powerful search bar at the top to instantly find any
+                task, team member, meeting, or document.</li>
+        </ul>
+    </div>
+
+    <!-- 2. Task Management -->
+    <div class="feature-section">
+        <h3>2. Tasks & Projects Management</h3>
+        <ul class="feature-list">
+            <li><span class="feature-title">My Tasks & Calendar:</span> Members can view their assigned work in a clean
+                list or pinned on a monthly calendar view.</li>
+            <li><span class="feature-title">Complete Workflow:</span> Members can 'Accept' a task, 'Submit' their work,
+                and mentors can review and provide ratings/feedback.</li>
+            <li><span class="feature-title">Task History (Audit Trail):</span> A visual timeline showing the entire
+                journey of a task—who created it, when it was assigned, and when it was completed.</li>
+            <li><span class="feature-title">Workload Analytics:</span> Beautiful graphs on the dashboard showing how
+                much work is distributed across different teams (like Web Dev or App Dev).</li>
+        </ul>
+    </div>
+
+    <!-- 3. Meetings -->
+    <div class="feature-section">
+        <h3>3. Meeting & Attendance Hub</h3>
+        <ul class="feature-list">
+            <li><span class="feature-title">Smart Meeting Invites:</span> Meetings only show up for the specific batch
+                or domain they are meant for. No spamming everyone!</li>
+            <li><span class="feature-title">One-Click Join:</span> Seamless integration to open Google Meet (or other
+                platforms) directly from the app.</li>
+            <li><span class="feature-title">Attendance Tracking:</span> Admins can easily mark who attended the meeting
+                and record reasons for those who were absent.</li>
+            <li><span class="feature-title">Minutes of Meeting (MOM):</span> Important notes and agendas are saved
+                within the meeting card for everyone to review later.</li>
+        </ul>
+    </div>
+
+    <!-- 4. Leaves & Forms -->
+    <div class="feature-section">
+        <h3>4. Leaves, Forms & Data Collection</h3>
+        <ul class="feature-list">
+            <li><span class="feature-title">Leave Application:</span> Members can apply for leave for a specific date,
+                task, or meeting. Admins can approve or reject these with one tap.</li>
+            <li><span class="feature-title">Dynamic Forms:</span> Instead of using third-party tools, admins can create
+                custom forms directly in the app to collect data or feedback from members.</li>
+            <li><span class="feature-title">Export Data:</span> Admins can view all form responses in a detailed table
+                and easily download them as an Excel/CSV file.</li>
+        </ul>
+    </div>
+
+    <!-- 5. Chat & Community -->
+    <div class="feature-section">
+        <h3>5. Team Chat & Collaboration</h3>
+        <ul class="feature-list">
+            <li><span class="feature-title">Dedicated Chat Rooms:</span> Real-time group chats divided by domains (e.g.,
+                specific chat room for the App Team).</li>
+            <li><span class="feature-title">File Sharing:</span> Users can drag-and-drop or upload images and documents
+                directly into the chat.</li>
+            <li><span class="feature-title">Smart Mentions (@):</span> Tag a specific team member in the chat to send
+                them an instant push notification on their phone.</li>
+            <li><span class="feature-title">Typing Indicators:</span> See when someone is typing a message in real-time,
+                making conversations feel alive.</li>
+        </ul>
+    </div>
+
+    <!-- 6. Notifications & Docs -->
+    <div class="feature-section">
+        <h3>6. Announcements & Document Hub</h3>
+        <ul class="feature-list">
+            <li><span class="feature-title">Instant Alerts:</span> An in-app Notification Bell keeps members updated on
+                new tasks, approved leaves, and upcoming meetings.</li>
+            <li><span class="feature-title">Community Broadcasts:</span> Admins can post major news and updates that
+                appear directly on everyone's dashboard.</li>
+            <li><span class="feature-title">Central Repository:</span> A secure vault for essential community documents.
+                Access is strictly controlled so members only see files relevant to their role.</li>
+        </ul>
+    </div>
+
+    <!-- 7. Administration -->
+    <div class="feature-section">
+        <h3>7. Powerful Administration & Control</h3>
+        <ul class="feature-list">
+            <li><span class="feature-title">SuperAdmin Dashboard:</span> A bird's-eye view of the entire organization
+                with high-level metrics and controls.</li>
+            <li><span class="feature-title">Team Directory:</span> A clean, searchable list of all community members and
+                their contact details.</li>
+            <li><span class="feature-title">Bulk Onboarding:</span> Instead of adding members one-by-one, admins can
+                upload a single CSV file to instantly onboard an entire batch of students.</li>
+            <li><span class="feature-title">Custom Access Roles:</span> A flexible security system where admins can
+                create custom roles (like 'Mentor' or 'Domain Head') and strictly control what they are allowed to see
+                and do in the portal.</li>
+        </ul>
+    </div>
+
+</body>
+
+</html>

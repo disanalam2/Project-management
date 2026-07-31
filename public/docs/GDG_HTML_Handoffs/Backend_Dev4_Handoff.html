@@ -1,0 +1,131 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backend Dev4 Handoff</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background: #f9fbfd; }
+        .container { background: #fff; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1, h2, h3 { color: #2c3e50; }
+        h1 { border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        pre { background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto; font-family: 'Courier New', Courier, monospace; }
+        code { background: #ecf0f1; color: #c0392b; padding: 2px 5px; border-radius: 3px; }
+        pre code { background: transparent; color: inherit; padding: 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background: #f4f7f6; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Technical Specification &amp; Handoff: Backend Developer 4 (Admin, IAM, Meetings)</h1>
+<p><strong>Developer Profile:</strong> Backend Dev 4<br><strong>Working Directory:</strong> <code>backend/src/dev4_admin_meetings/</code><br><strong>Core Responsibilities:</strong> Role-Based Access Control (RBAC), Global Security Middlewares, Meeting Scheduling, Attendance, and Core Shared Data Models.</p>
+<p><strong>Objective:</strong> 
+This document provides the complete business logic, API contracts, and database specifications required to build your module. You are responsible for writing the actual implementation code (Node.js/Express).</p>
+<hr>
+<h2>1. Global Naming &amp; Data Dictionary (Must Follow)</h2>
+<p>To ensure your APIs connect perfectly with the Web and App teams, you MUST strictly use these exact terms in your Database schemas and API JSON responses:</p>
+<ul>
+<li><strong>Identifiers:</strong> Always use <code>userId</code>, <code>roleId</code>, <code>meetingId</code>. <strong>NEVER</strong> use <code>user_id</code>, <code>role_id</code>, or <code>id_meet</code>.</li>
+<li><strong>JSON Keys:</strong> Always use <code>camelCase</code> (e.g., <code>meetingLink</code>, <code>startTime</code>, <code>roleName</code>).</li>
+<li><strong>Response Format:</strong> Every single API response you build MUST be wrapped in this exact format:<ul>
+<li>Success: <code>{ &quot;success&quot;: true, &quot;data&quot;: { ...your_data } }</code></li>
+<li>Error: <code>{ &quot;success&quot;: false, &quot;message&quot;: &quot;error string&quot; }</code></li>
+</ul>
+</li>
+<li><strong>Enums:</strong> Status strings must be strictly lowercase: <code>&quot;scheduled&quot;</code>, <code>&quot;present&quot;</code>, <code>&quot;absent&quot;</code>. Do not capitalize them in the backend.</li>
+</ul>
+<hr>
+<h2>2. Database Schema Specifications</h2>
+<p>You are the foundational data architect. You are responsible for creating the schemas that other backend developers rely on.</p>
+<h3>A. Core IAM Collections (<code>RoleModel.js</code>)</h3>
+<ul>
+<li><strong>roleName:</strong> String, Unique (e.g., <code>&quot;Super Admin&quot;</code>, <code>&quot;Core Team&quot;</code>, <code>&quot;Member&quot;</code>).</li>
+<li><strong>description:</strong> String.</li>
+<li><strong>permissions:</strong> Array of Strings (e.g., <code>[&#39;CREATE_TASK&#39;, &#39;DELETE_USER&#39;, &#39;MANAGE_MEETINGS&#39;]</code>).</li>
+</ul>
+<h3>B. Core Shared Collections (<code>NotificationModel.js</code>, <code>UpdatesModel.js</code>)</h3>
+<ul>
+<li><strong>CRITICAL:</strong> Dev 1 is writing the <code>NotificationService</code> that saves data, but YOU are responsible for defining the Mongoose Model.</li>
+<li><strong>Notification:</strong> <ul>
+<li><code>userId</code>: ObjectId (Receiver).</li>
+<li><code>title</code>: String.</li>
+<li><code>message</code>: String.</li>
+<li><code>type</code>: String (e.g., <code>&#39;task&#39;</code>, <code>&#39;meeting&#39;</code>).</li>
+<li><code>isRead</code>: Boolean, Default: <code>false</code>.</li>
+</ul>
+</li>
+</ul>
+<h3>C. Meetings &amp; Attendance (<code>MeetingModel.js</code>, <code>AttendanceModel.js</code>)</h3>
+<ul>
+<li><strong>Meeting:</strong> <ul>
+<li><code>title</code>, <code>description</code>.</li>
+<li><code>startTime</code>: Date (ISO 8601).</li>
+<li><code>endTime</code>: Date (ISO 8601).</li>
+<li><code>meetingLink</code>: String (Can be empty if using embedded Jitsi/LiveKit).</li>
+<li><code>hostedBy</code>: ObjectId (Reference to User).</li>
+<li><code>status</code>: String enum (<code>&#39;scheduled&#39;</code>, <code>&#39;ongoing&#39;</code>, <code>&#39;finished&#39;</code>, <code>&#39;cancelled&#39;</code>), Default: <code>&#39;scheduled&#39;</code>.</li>
+</ul>
+</li>
+<li><strong>Attendance:</strong> <ul>
+<li><code>meetingId</code>: ObjectId.</li>
+<li><code>userId</code>: ObjectId.</li>
+<li><code>status</code>: String enum (<code>&#39;present&#39;</code>, <code>&#39;absent&#39;</code>, <code>&#39;late&#39;</code>), Default: <code>&#39;absent&#39;</code>.</li>
+<li><code>joinTime</code>: Date.</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2>3. RBAC Middlewares (Your Most Important Task)</h2>
+<p>You are the <strong>Security Guard</strong> of the backend. You must write Express Middlewares that OTHER developers will import to protect their routes.</p>
+<p><strong>Task:</strong> Write an <code>authorizeRole</code> middleware (<code>middlewares/rbac.middleware.js</code>).</p>
+<ul>
+<li><strong>Logic Flow:</strong> <ol>
+<li>It should receive the JWT payload from Dev 1&#39;s Auth Middleware (<code>req.user.roleId</code>).</li>
+<li>It looks up the <code>RoleModel</code> in the DB and extracts the <code>permissions</code> array.</li>
+<li>It verifies if the user has the required permission (e.g., does the array include <code>&#39;CREATE_TASK&#39;</code>?).</li>
+<li>If unauthorized, return <code>403 Forbidden: { &quot;success&quot;: false, &quot;message&quot;: &quot;Insufficient permissions&quot; }</code>.</li>
+</ol>
+</li>
+</ul>
+<p><strong>How Dev 2 will use your code:</strong></p>
+<pre><code class="language-javascript">const { authorizeRole } = require(&#39;../dev4_admin_meetings/middlewares/rbac.middleware&#39;);
+
+// Dev 2 protects the Create Task route using YOUR middleware:
+router.post(&#39;/tasks&#39;, authMiddleware, authorizeRole([&#39;CREATE_TASK&#39;]), createTask);
+</code></pre>
+<hr>
+<h2>4. API Contracts &amp; Business Logic</h2>
+<h3>A. IAM &amp; Roles (<code>/api/iam</code>)</h3>
+<ul>
+<li><strong>API-07:</strong> Build CRUD operations for roles (<code>POST /api/iam/roles</code>, <code>GET /api/iam/roles</code>). </li>
+<li>Ensure these routes are strictly protected and only Super Admins can access them.</li>
+</ul>
+<h3>B. Meetings (<code>/api/meetings</code>)</h3>
+<ul>
+<li><strong>API-11 (Create/Manage):</strong> Standard CRUD for <code>MeetingModel</code>. <ul>
+<li><strong>Cross-Team:</strong> When a meeting is created, import and call Dev 1&#39;s <code>NotificationService</code> to alert all members.</li>
+</ul>
+</li>
+<li><strong>API-12 (Attendance):</strong> Provide an endpoint (<code>POST /api/meetings/:meetingId/attend</code>) for users to mark themselves as present when they join the call. This updates the <code>AttendanceModel</code>.</li>
+</ul>
+<h3>C. System Alerts (WS-05)</h3>
+<ul>
+<li>You will use Dev 3&#39;s global Socket.io instance (<code>global.io</code>) to broadcast system-wide alerts to everyone. </li>
+<li><strong>Logic:</strong> <code>global.io.emit(&#39;system_alert&#39;, { message: &#39;Server going down for maintenance&#39; });</code></li>
+</ul>
+<hr>
+<h2>5. Cross-Team Integration Points (Crucial Summary)</h2>
+<p>Because you build the core security and shared models, every developer depends on you. Do not change model names or middleware signatures without notifying the team.</p>
+<ol>
+<li><strong>Dev 1 Dependency on YOU:</strong> Dev 1 needs your <code>RoleModel</code> to assign default roles during User Registration.</li>
+<li><strong>Dev 1 Dependency on YOU (Notifs):</strong> Dev 1 will <code>import NotificationModel from &#39;../dev4_admin_meetings/models/NotificationModel&#39;</code> to save alerts.</li>
+<li><strong>Everyone&#39;s Dependency on YOU:</strong> Dev 1, Dev 2, and Dev 3 will all import your <code>authorizeRole</code> middleware to protect their API endpoints.</li>
+<li><strong>Your Dependency on Dev 3:</strong> You must wait for Dev 3 to initialize <code>global.io</code> before you can emit <code>system_alert</code> broadcasts.</li>
+</ol>
+
+    </div>
+</body>
+</html>

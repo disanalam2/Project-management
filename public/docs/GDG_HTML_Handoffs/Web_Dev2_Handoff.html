@@ -1,0 +1,166 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Dev2 Handoff</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background: #f9fbfd; }
+        .container { background: #fff; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1, h2, h3 { color: #2c3e50; }
+        h1 { border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        pre { background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto; font-family: 'Courier New', Courier, monospace; }
+        code { background: #ecf0f1; color: #c0392b; padding: 2px 5px; border-radius: 3px; }
+        pre code { background: transparent; color: inherit; padding: 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background: #f4f7f6; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Technical Specification &amp; Handoff: Web Frontend Developer 2 (Tasks &amp; Registry)</h1>
+<p><strong>Developer Profile:</strong> Web Dev 2<br><strong>Working Directory:</strong> <code>web/src/app/dev2_tasks_calendar/</code><br><strong>Core Responsibilities:</strong> Core Task Management, Interactive Calendar, Global Registry Tables, and Internal Documentation.
+<strong>Tech Stack:</strong> Next.js (App Router), React.js (JavaScript / <code>.jsx</code>), Vanilla CSS/Tailwind.</p>
+<p><strong>Objective:</strong> 
+This document provides the complete UI architecture, state management logic, component breakdown, and API integration contracts required to build your module. You are responsible for writing the actual implementation code. All edge cases and structures are defined below so you can work entirely independently.</p>
+<hr>
+<h2>1. Zero-Conflict Architecture (Strict Rules)</h2>
+<p>To ensure your code never conflicts with the other Web developers, you must strictly follow this folder structure. <strong>Do not create files outside of <code>dev2_tasks_calendar/</code>.</strong></p>
+<pre><code class="language-text">web/src/app/dev2_tasks_calendar/
+├── tasks/ (W08-W13)
+│   ├── api/          # Contains API client calls (e.g., fetchTasks.js)
+│   ├── hooks/        # Custom React hooks (e.g., useTaskWorkflow.js)
+│   ├── components/   # UI parts (e.g., TaskTable.jsx, KanbanBoard.jsx)
+│   └── TasksPage.jsx # Main view file handling tabs (List vs Calendar)
+├── registry/ (W19-W20)
+│   ├── api/
+│   ├── components/
+│   └── RegistryPage.jsx
+└── docs/ (W32)
+    ├── api/
+    ├── components/
+    └── DocsPage.jsx
+</code></pre>
+<hr>
+<h2>2. Global Naming &amp; Data Integration Dictionary</h2>
+<p>To ensure your frontend connects perfectly with the Backend (Node.js/Express) developers, you MUST strictly use these exact JSON keys:</p>
+<ul>
+<li><strong>Identifiers:</strong> Always use <code>userId</code>, <code>taskId</code>, <code>meetingId</code>. <strong>NEVER</strong> use <code>_id</code> directly in components without mapping it.</li>
+<li><strong>API Response Format:</strong> You must check <code>response.success</code> before using data:<ul>
+<li>Success: <code>{ &quot;success&quot;: true, &quot;data&quot;: { ... } }</code></li>
+<li>Error: <code>{ &quot;success&quot;: false, &quot;message&quot;: &quot;error string&quot; }</code></li>
+</ul>
+</li>
+<li><strong>Task Status Enum:</strong> <code>&quot;pending&quot;</code>, <code>&quot;in-progress&quot;</code>, <code>&quot;in-review&quot;</code>, <code>&quot;completed&quot;</code>.</li>
+</ul>
+<hr>
+<h2>3. Feature Breakdown &amp; Component Logic</h2>
+<h3>Feature 1: Task Management &amp; Calendar (W08 - W13)</h3>
+<p>This is the most complex part of your module. Users will switch between a List/Kanban view and a Calendar view.</p>
+<p><strong>Required Components (<code>tasks/components/</code>):</strong></p>
+<ol>
+<li><strong><code>ViewToggle.jsx</code>:</strong><ul>
+<li><strong>Logic:</strong> A simple tab or segmented control to switch the local state between <code>&#39;list&#39;</code> and <code>&#39;calendar&#39;</code> views.</li>
+</ul>
+</li>
+<li><strong><code>TasksListView.jsx</code> (W09) &amp; <code>TaskFilters.jsx</code> (W11):</strong><ul>
+<li><strong>Logic:</strong> A Data Table or Kanban board showing tasks.</li>
+<li><strong>Filters:</strong> Must include dropdowns to filter by <code>status</code> (pending, completed) and <code>priority</code> (low, urgent).</li>
+<li><strong>Data Source:</strong> Calls <code>GET /api/tasks?status=...</code> (Backend Dev 2).</li>
+</ul>
+</li>
+<li><strong><code>CalendarView.jsx</code> (W08):</strong><ul>
+<li><strong>Logic:</strong> You can use a library like <code>react-big-calendar</code> or <code>fullcalendar</code>. It should map the <code>dueDate</code> of tasks onto the grid. Clicking a date/event opens the task details modal.</li>
+</ul>
+</li>
+<li><strong><code>AddTaskModal.jsx</code> (W10):</strong><ul>
+<li><strong>Logic:</strong> A form to create a new task. Requires <code>title</code>, <code>description</code>, <code>assignedTo</code> (fetch list of users from <code>GET /api/users/directory</code>), <code>dueDate</code>, and <code>priority</code>.</li>
+<li><strong>API Connection:</strong> Submits <code>POST /api/tasks</code>.</li>
+</ul>
+</li>
+<li><strong><code>TaskWorkflowTable.jsx</code> (W12) &amp; <code>ActivityLog.jsx</code> (W13):</strong><ul>
+<li><strong>Logic:</strong> When viewing a specific task, show buttons to change its status (e.g., &quot;Start Work&quot;, &quot;Submit for Review&quot;).</li>
+<li><strong>Activity Log:</strong> A chronological list of status changes fetched from the backend (e.g., &quot;John moved task to In-Review at 10:00 AM&quot;).</li>
+</ul>
+</li>
+</ol>
+<p><strong>Example Task State Hook (<code>tasks/hooks/useTasks.js</code>):</strong></p>
+<pre><code class="language-javascript">import { useState, useEffect } from &#39;react&#39;;
+import apiClient from &#39;../../../shared/api/apiClient&#39;;
+
+export const useTasks = (filters) =&gt; {
+    const [tasks, setTasks] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() =&gt; {
+        const fetchTasks = async () =&gt; {
+            setLoading(true);
+            try {
+                // filters is an object like { status: &#39;pending&#39;, priority: &#39;urgent&#39; }
+                const params = new URLSearchParams(filters).toString();
+                const response = await apiClient.get(`/api/tasks?${params}`);
+                if (response.data.success) {
+                    setTasks(response.data.data);
+                }
+            } catch (err) {
+                console.error(&quot;Failed to load tasks&quot;);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchTasks();
+    }, [filters]); // Refetch when filters change
+
+    return { tasks, loading };
+};
+</code></pre>
+<hr>
+<h3>Feature 2: Registry Tables (W19 - W20)</h3>
+<p>This acts as a historical archive for completed works and past meetings.</p>
+<p><strong>Required Components (<code>registry/components/</code>):</strong></p>
+<ol>
+<li><strong><code>WorksTable.jsx</code> (W19):</strong><ul>
+<li><strong>Logic:</strong> A strictly read-only, highly paginated data table showing all <code>completed</code> tasks across the entire organization.</li>
+<li><strong>API Connection:</strong> <code>GET /api/tasks/registry</code>. Should support sorting by date completed.</li>
+</ul>
+</li>
+<li><strong><code>MeetingTable.jsx</code> (W20):</strong><ul>
+<li><strong>Logic:</strong> A read-only table showing past meetings, attendees, and a button to view Minutes of Meeting (MOM).</li>
+<li><strong>API Connection:</strong> <code>GET /api/meetings/past</code>.</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3>Feature 3: Detailed Documentation (W32)</h3>
+<p>A simple markdown viewer or rich text reader for internal project docs and guides.</p>
+<p><strong>Required Components (<code>docs/components/</code>):</strong></p>
+<ol>
+<li><strong><code>DocsSidebar.jsx</code>:</strong><ul>
+<li><strong>Logic:</strong> A vertical list of available documentation topics fetched from the backend.</li>
+</ul>
+</li>
+<li><strong><code>DocsViewer.jsx</code>:</strong><ul>
+<li><strong>Logic:</strong> Fetches the selected document (Markdown or HTML) from the backend and renders it using a library like <code>react-markdown</code> or <code>dangerouslySetInnerHTML</code> (with sanitization).</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2>4. Cross-Team Integration Points (Crucial)</h2>
+<p>As a Web Frontend Developer, you need to use utilities built by others. Follow these strict rules to avoid bugs:</p>
+<h3>1. Global API Client (<code>shared/api/apiClient.js</code>)</h3>
+<ul>
+<li>Do <strong>NOT</strong> write raw <code>fetch()</code> calls containing <code>Authorization: Bearer &lt;token&gt;</code> in every single file.</li>
+<li>The project architect will create a shared <code>apiClient.js</code> (using Axios) in the <code>shared/</code> folder. This client will automatically attach the JWT token to every request. </li>
+<li><strong>You must import and use this client</strong> in your <code>api/</code> folders.</li>
+</ul>
+<h3>2. State Management &amp; Modals</h3>
+<ul>
+<li>If your <code>AddTaskModal</code> needs to block the entire screen, use the shared <code>&lt;Modal /&gt;</code> component from the <code>shared/components/</code> folder to ensure the backdrop and z-index are consistent with the rest of the application.</li>
+<li>To get the current user&#39;s ID for assigning tasks, use the global auth hook (e.g., <code>const { user } = useAuthStore()</code>). Do not parse the JWT yourself.</li>
+</ul>
+
+    </div>
+</body>
+</html>

@@ -6,7 +6,9 @@ import Dashboard from './components/Dashboard';
 import Documents from './components/Documents';
 import Chat from './components/Chat';
 import Members from './components/Members';
-
+import DeveloperHandoffs from './components/DeveloperHandoffs';
+import SchemasAndFeatures from './components/SchemasAndFeatures';
+import WorkDistribution from './components/WorkDistribution';
 // Create Auth Context
 export const AuthContext = createContext();
 
@@ -140,6 +142,9 @@ function App() {
             <Route path="documents" element={<Documents />} />
             <Route path="chat" element={<Chat />} />
             <Route path="members" element={<Members />} />
+            <Route path="developer-handoffs" element={<DeveloperHandoffs />} />
+            <Route path="schemas" element={<SchemasAndFeatures />} />
+            <Route path="work-distribution" element={<WorkDistribution />} />
           </Route>
         </Routes>
       </BrowserRouter>

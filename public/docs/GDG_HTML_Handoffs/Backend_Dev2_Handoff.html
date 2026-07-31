@@ -1,0 +1,157 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backend Dev2 Handoff</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background: #f9fbfd; }
+        .container { background: #fff; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1, h2, h3 { color: #2c3e50; }
+        h1 { border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        pre { background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto; font-family: 'Courier New', Courier, monospace; }
+        code { background: #ecf0f1; color: #c0392b; padding: 2px 5px; border-radius: 3px; }
+        pre code { background: transparent; color: inherit; padding: 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background: #f4f7f6; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Technical Specification &amp; Handoff: Backend Developer 2 (Core Business)</h1>
+<p><strong>Developer Profile:</strong> Backend Dev 2<br><strong>Working Directory:</strong> <code>backend/src/dev2_core_business/</code><br><strong>Core Responsibilities:</strong> Tasks/Works Management, Dynamic Forms, Leave Applications, and Central Repository.</p>
+<p><strong>Objective:</strong> 
+This document provides the complete business logic, API contracts, and database specifications required to build your module. You are responsible for writing the actual implementation code (Node.js/Express). All edge cases, inputs, and outputs are defined below so you can work entirely independently without needing to consult the rest of the team.</p>
+<hr>
+<h2>1. Global Naming &amp; Data Dictionary (Must Follow)</h2>
+<p>To ensure your APIs connect perfectly with the Web and App teams, you MUST strictly use these exact terms in your Database schemas and API JSON responses:</p>
+<ul>
+<li><strong>Identifiers:</strong> Always use <code>userId</code>, <code>taskId</code>, <code>formId</code>. <strong>NEVER</strong> use <code>user_id</code>, <code>task_id</code>, or <code>id_task</code>.</li>
+<li><strong>JSON Keys:</strong> Always use <code>camelCase</code> (e.g., <code>assignedTo</code>, <code>dueDate</code>, <code>documentUrl</code>).</li>
+<li><strong>Response Format:</strong> Every single API response you build MUST be wrapped in this exact format:<ul>
+<li>Success: <code>{ &quot;success&quot;: true, &quot;data&quot;: { ...your_data } }</code></li>
+<li>Error: <code>{ &quot;success&quot;: false, &quot;message&quot;: &quot;error string&quot; }</code></li>
+</ul>
+</li>
+<li><strong>Enums:</strong> Status strings must be strictly lowercase: <code>&quot;pending&quot;</code>, <code>&quot;in-progress&quot;</code>, <code>&quot;completed&quot;</code>. Do not capitalize them in the backend.</li>
+</ul>
+<hr>
+<h2>2. Database Schema Specifications</h2>
+<p>You are responsible for creating multiple Mongoose models.</p>
+<h3>A. <code>Task</code> Collection (<code>TaskModel.js</code>)</h3>
+<ul>
+<li><strong>title:</strong> String, Required.</li>
+<li><strong>description:</strong> String.</li>
+<li><strong>assignedTo:</strong> ObjectId, Reference to <code>User</code> collection.</li>
+<li><strong>createdBy:</strong> ObjectId, Reference to <code>User</code> collection.</li>
+<li><strong>status:</strong> String enum (<code>&#39;pending&#39;</code>, <code>&#39;in-progress&#39;</code>, <code>&#39;completed&#39;</code>, <code>&#39;cancelled&#39;</code>), Default: <code>&#39;pending&#39;</code>.</li>
+<li><strong>priority:</strong> String enum (<code>&#39;low&#39;</code>, <code>&#39;medium&#39;</code>, <code>&#39;high&#39;</code>, <code>&#39;urgent&#39;</code>), Default: <code>&#39;medium&#39;</code>.</li>
+<li><strong>dueDate:</strong> Date (ISO 8601).</li>
+</ul>
+<h3>B. <code>Form</code> &amp; <code>FormSubmission</code> Collections (<code>FormModel.js</code>, <code>FormSubmissionModel.js</code>)</h3>
+<ul>
+<li><strong>Form:</strong> <ul>
+<li><code>title</code>: String.</li>
+<li><code>description</code>: String.</li>
+<li><code>fields</code>: Array of objects (e.g., <code>[{ fieldName: &quot;Email&quot;, type: &quot;text&quot;, required: true }]</code>).</li>
+<li><code>createdBy</code>: ObjectId.</li>
+<li><code>isActive</code>: Boolean.</li>
+</ul>
+</li>
+<li><strong>FormSubmission:</strong> <ul>
+<li><code>formId</code>: ObjectId (Reference to Form).</li>
+<li><code>userId</code>: ObjectId (Submitter).</li>
+<li><code>responses</code>: Map / Object (e.g., <code>{ &quot;Email&quot;: &quot;test@test.com&quot; }</code>).</li>
+</ul>
+</li>
+</ul>
+<h3>C. <code>LeaveApplication</code> Collection (<code>LeaveModel.js</code>)</h3>
+<ul>
+<li><strong>userId:</strong> ObjectId.</li>
+<li><strong>reason:</strong> String.</li>
+<li><strong>startDate:</strong> Date.</li>
+<li><strong>endDate:</strong> Date.</li>
+<li><strong>status:</strong> String enum (<code>&#39;pending&#39;</code>, <code>&#39;approved&#39;</code>, <code>&#39;rejected&#39;</code>), Default: <code>&#39;pending&#39;</code>.</li>
+<li><strong>reviewedBy:</strong> ObjectId (Reference to User who approved/rejected it).</li>
+</ul>
+<hr>
+<h2>3. API Contracts &amp; Business Logic</h2>
+<h3>A. Tasks Module (<code>/api/tasks</code>)</h3>
+<h4>1. Create a Task (API-08)</h4>
+<ul>
+<li><strong>Endpoint:</strong> <code>POST /api/tasks</code></li>
+<li><strong>Auth Required:</strong> Yes (JWT)</li>
+<li><strong>Request Payload:</strong> <code>{ &quot;title&quot;: &quot;string&quot;, &quot;description&quot;: &quot;string&quot;, &quot;assignedTo&quot;: &quot;objectId&quot;, &quot;dueDate&quot;: &quot;iso_date&quot;, &quot;priority&quot;: &quot;high&quot; }</code></li>
+<li><strong>Business Logic Flow:</strong><ol>
+<li>Extract <code>createdBy</code> from <code>req.user.userId</code>.</li>
+<li>Save task to DB.</li>
+<li><strong>Cross-Team Integration:</strong> Call <code>NotificationService.trigger(assignedTo, &quot;New Task&quot;, title, &quot;task&quot;)</code> (This service is built by Dev 1).</li>
+</ol>
+</li>
+<li><strong>Success Response (201):</strong> Newly created task object.</li>
+</ul>
+<h4>2. Get Tasks (API-09)</h4>
+<ul>
+<li><strong>Endpoint:</strong> <code>GET /api/tasks</code></li>
+<li><strong>Query Params:</strong> <code>?page=1&amp;limit=20&amp;status=pending&amp;assignedTo=123</code></li>
+<li><strong>Business Logic Flow:</strong> <ol>
+<li>Build query based on filters.</li>
+<li>Return paginated tasks. </li>
+<li><strong>CRITICAL:</strong> Use <code>.populate(&#39;assignedTo&#39;, &#39;name profilePicture&#39;)</code> so the frontend can display the assignee&#39;s face and name without making a second API call.</li>
+</ol>
+</li>
+</ul>
+<h4>3. Update Task Status (API-10)</h4>
+<ul>
+<li><strong>Endpoint:</strong> <code>PATCH /api/tasks/:taskId/status</code></li>
+<li><strong>Request Payload:</strong> <code>{ &quot;status&quot;: &quot;completed&quot; }</code></li>
+<li><strong>Business Logic Flow:</strong> <ol>
+<li>Update status. </li>
+<li>Trigger notification back to the <code>createdBy</code> user that the task was completed.</li>
+</ol>
+</li>
+</ul>
+<h3>B. Forms Module (<code>/api/forms</code>)</h3>
+<ul>
+<li><strong>API-13 Logic:</strong> <ul>
+<li>Provide <code>POST /api/forms</code> for admins to create dynamic schemas.</li>
+<li>Provide <code>POST /api/forms/:formId/submit</code> for users to submit data. The controller must loop through the <code>Form.fields</code> definition and ensure the user submitted all <code>required: true</code> fields.</li>
+</ul>
+</li>
+</ul>
+<h3>C. Leaves Module (<code>/api/leaves</code>)</h3>
+<ul>
+<li><strong>API-14 Logic:</strong> <ul>
+<li>Users can <code>POST /api/leaves</code> to apply. </li>
+<li>Admins can <code>PATCH /api/leaves/:leaveId</code> to approve/reject. </li>
+<li>Ensure an approval triggers a notification to the applicant.</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2>4. Cross-Team Integration Points (Crucial)</h2>
+<h3>1. Notifications (Interacting with Dev 1)</h3>
+<p>You do NOT need to write Socket.io or Notification DB logic. 
+Dev 1 is writing a <code>NotificationService</code> in their folder. Whenever a task is assigned or a leave is approved, you will simply import their service and call it:</p>
+<pre><code class="language-javascript">const { NotificationService } = require(&#39;../dev1_auth_users/services/notifs.service&#39;);
+
+// Example: Inside your leave approval controller:
+await NotificationService.trigger(
+    leave.userId, 
+    &quot;Leave Approved&quot;, 
+    &quot;Your leave request for next week was approved&quot;, 
+    &quot;leave&quot;
+);
+</code></pre>
+<h3>2. Authorization / Roles (Interacting with Dev 4)</h3>
+<ul>
+<li>You <strong>do not</strong> need to write the middleware that checks if a user is an &quot;Admin&quot; to approve leaves or create tasks.</li>
+<li>Dev 4 is responsible for building the <code>isAdmin</code> or <code>checkPolicy</code> middleware. </li>
+<li>You will just attach their middleware to your Routes later. Do not waste time building your own role-check functions.</li>
+</ul>
+
+    </div>
+</body>
+</html>

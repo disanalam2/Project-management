@@ -1,0 +1,165 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Dev3 Handoff</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background: #f9fbfd; }
+        .container { background: #fff; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1, h2, h3 { color: #2c3e50; }
+        h1 { border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        pre { background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto; font-family: 'Courier New', Courier, monospace; }
+        code { background: #ecf0f1; color: #c0392b; padding: 2px 5px; border-radius: 3px; }
+        pre code { background: transparent; color: inherit; padding: 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background: #f4f7f6; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Technical Specification &amp; Handoff: App Developer 3 (Meetings, Profile &amp; Auth)</h1>
+<p><strong>Developer Profile:</strong> App Dev 3<br><strong>Working Directory:</strong> <code>app/lib/features/dev3_meetings_profile/</code><br><strong>Core Responsibilities:</strong> Meeting Scheduling &amp; Video Integration, Global Authentication (Login), Profile Settings, and the Main App Sidebar.
+<strong>Tech Stack:</strong> Flutter (Dart), Provider/Riverpod (State Management), Dio (API Client).</p>
+<p><strong>Objective:</strong> 
+This document provides the complete UI architecture, state management logic, widget breakdown, and API integration contracts required to build your module for iOS and Android. You hold a crucial role because you will build the Global Authentication provider that all other developers will rely upon.</p>
+<hr>
+<h2>1. Zero-Conflict Architecture (Strict Rules)</h2>
+<p>To ensure your code never conflicts with the 3 other Flutter developers, you must strictly follow this folder structure. <strong>Do not create files outside of <code>dev3_meetings_profile/</code>.</strong></p>
+<pre><code class="language-text">app/lib/features/dev3_meetings_profile/
+├── data/
+│   ├── models/       # Dart classes matching API JSON (e.g., user_model.dart)
+│   └── repository/   # API logic using Dio (e.g., auth_repository.dart)
+├── providers/        # State management (e.g., auth_provider.dart)
+├── screens/          # Full page views
+│   ├── MeetingsScreen.dart
+│   ├── MeetDetails.dart
+│   ├── ProfileScreen.dart
+│   ├── LoginScreen.dart
+│   └── DirectoryScreen.dart
+└── components/       # Reusable UI parts specific to your feature
+    ├── SidebarDrawer.dart
+    └── ThemeToggle.dart
+</code></pre>
+<hr>
+<h2>2. Global Naming &amp; Data Integration Dictionary</h2>
+<p>To ensure your mobile app connects perfectly with the Backend (Node.js/Express) developers, you MUST strictly use these exact JSON keys when serializing/deserializing Data Models:</p>
+<ul>
+<li><strong>Identifiers:</strong> Always map <code>userId</code>, <code>meetingId</code> correctly in your <code>.fromJson()</code> methods. <strong>NEVER</strong> use <code>_id</code> directly in UI.</li>
+<li><strong>Response Format:</strong> The backend will always respond with this structure. Ensure your repository layer checks <code>response[&#39;success&#39;]</code>:<ul>
+<li>Success: <code>{ &quot;success&quot;: true, &quot;data&quot;: { ... } }</code></li>
+<li>Error: <code>{ &quot;success&quot;: false, &quot;message&quot;: &quot;error string&quot; }</code></li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2>3. Feature Breakdown &amp; Widget Logic</h2>
+<h3>Feature 1: Global Authentication Flow (A31, A36)</h3>
+<p>You are responsible for the Login screen and securely storing the JWT token on the mobile device. </p>
+<p><strong>Required Widgets (<code>screens/LoginScreen.dart</code>):</strong></p>
+<ol>
+<li><strong><code>LoginForm</code> (A31):</strong><ul>
+<li><strong>Logic:</strong> Standard Email/Password login UI.</li>
+<li><strong>API Connection:</strong> Submits <code>POST /api/users/login</code> (Backend Dev 1).</li>
+<li><strong>Post-Login Storage:</strong> On success, extract the <code>token</code> and <code>user</code> object. You <strong>MUST</strong> save the token securely using <code>flutter_secure_storage</code> (not standard SharedPreferences).</li>
+<li><strong>State:</strong> Update the global <code>AuthProvider</code> and use <code>Navigator.pushReplacementNamed</code> to send the user to the Dashboard (<code>/dashboard</code>).</li>
+</ul>
+</li>
+<li><strong><code>ForgotPasswordFlow</code> (A36):</strong><ul>
+<li><strong>Logic:</strong> A multi-step UI. Step 1: Request OTP. Step 2: Enter OTP. Step 3: New Password.</li>
+</ul>
+</li>
+</ol>
+<p><strong>Example Auth Provider (<code>providers/auth_provider.dart</code>):</strong></p>
+<pre><code class="language-dart">import &#39;package:flutter/material.dart&#39;;
+import &#39;package:flutter_secure_storage/flutter_secure_storage.dart&#39;;
+import &#39;../data/repository/auth_repository.dart&#39;;
+
+class AuthProvider extends ChangeNotifier {
+  final AuthRepository _repository = AuthRepository();
+  final storage = const FlutterSecureStorage();
+  
+  Map&lt;String, dynamic&gt;? currentUser;
+  String? token;
+
+  Future&lt;bool&gt; login(String email, String password) async {
+    final response = await _repository.login(email, password);
+    if (response[&#39;success&#39;]) {
+      token = response[&#39;data&#39;][&#39;token&#39;];
+      currentUser = response[&#39;data&#39;][&#39;user&#39;];
+      await storage.write(key: &#39;jwt_token&#39;, value: token);
+      notifyListeners();
+      return true;
+    }
+    return false;
+  }
+}
+</code></pre>
+<hr>
+<h3>Feature 2: Meeting Management &amp; Video Integration (A14 - A18)</h3>
+<p>This module handles scheduling, viewing, and joining live meetings via mobile.</p>
+<p><strong>Required Widgets (<code>screens/</code> &amp; <code>components/</code>):</strong></p>
+<ol>
+<li><strong><code>MeetingsScreen</code> (A14) &amp; <code>MeetingFilters</code> (A16):</strong><ul>
+<li><strong>Logic:</strong> A <code>Scaffold</code> displaying a <code>ListView</code> of meetings. Needs a dropdown or horizontal pills to toggle between &quot;Upcoming&quot;, &quot;Past&quot;, and &quot;My Meetings&quot;.</li>
+<li><strong>API Connection:</strong> <code>GET /api/meetings?filter=...</code>.</li>
+</ul>
+</li>
+<li><strong><code>CreateMeetingSheet</code> (A15):</strong><ul>
+<li><strong>Logic:</strong> A bottom sheet form for admins. Fields: Title, Time (<code>showTimePicker</code>), Date (<code>showDatePicker</code>), Attendees (Multi-select list).</li>
+</ul>
+</li>
+<li><strong><code>MeetDetailsScreen</code> (A17):</strong><ul>
+<li><strong>Logic:</strong> Detailed view. Admins can see an interactive checklist of attendees and mark them present/absent (<code>PUT /api/meetings/:meetingId/attendance</code>).</li>
+</ul>
+</li>
+<li><strong><code>JoinMeetingButton</code> (A18):</strong><ul>
+<li><strong>Logic:</strong> A prominent button. When clicked, it should either open the meeting link in an external app using <code>url_launcher</code> OR, if implementing in-app video (Stream/LiveKit), it will navigate to a dedicated Video Call Screen. Keep this video SDK logic tightly contained within this folder.</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3>Feature 3: Profile &amp; Global Sidebar (A27 - A29, A35)</h3>
+<p>General user settings and navigation.</p>
+<p><strong>Required Widgets (<code>screens/</code> &amp; <code>components/</code>):</strong></p>
+<ol>
+<li><strong><code>SidebarDrawer</code> (A28):</strong><ul>
+<li><strong>Logic:</strong> You will build the master <code>Drawer</code> widget that gets attached to the <code>Scaffold</code> of almost every main screen. It will contain navigation links to features built by other developers (e.g., <code>Navigator.pushNamed(&#39;/tasks&#39;)</code>).</li>
+</ul>
+</li>
+<li><strong><code>ProfileScreen</code> (A27):</strong><ul>
+<li><strong>Logic:</strong> UI to view and edit personal details (Name, Phone, Bio, Profile Picture).</li>
+<li><strong>API Connection:</strong> <code>GET /api/users/me</code> and <code>PUT /api/users/me</code>. For images, use the <code>image_picker</code> package and upload via <code>Dio</code> multipart form data.</li>
+</ul>
+</li>
+<li><strong><code>ThemeToggle</code> (A29):</strong><ul>
+<li><strong>Logic:</strong> A switch in the sidebar to toggle Dark/Light mode. Use a global <code>ThemeProvider</code> to manage this and persist the preference.</li>
+</ul>
+</li>
+<li><strong><code>TeamDirectoryScreen</code> (A35):</strong><ul>
+<li><strong>Logic:</strong> A <code>GridView</code> of user profile cards showing everyone in the organization.</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2>4. Cross-Team Integration Points (Crucial)</h2>
+<p>As a Mobile Frontend Developer, you need to use utilities built by others. Follow these strict rules to avoid bugs:</p>
+<h3>1. The Global Auth Provider</h3>
+<ul>
+<li>You are building the <code>AuthProvider</code>. Ensure it is robust, bug-free, and handles auto-login on app startup (by checking <code>flutter_secure_storage</code> for an existing token). Other developers will rely entirely on this to get the user&#39;s ID and role.</li>
+</ul>
+<h3>2. Global API Client (<code>core/network/api_client.dart</code>)</h3>
+<ul>
+<li>The project architect will create a shared <code>Dio</code> instance in the <code>lib/core/</code> folder. This client will automatically read the token you saved in Secure Storage and attach it as a Bearer token to all requests. </li>
+<li><strong>You must import and use this Dio client</strong> in your <code>data/repository/</code> folders. Do not use raw <code>http.get</code>.</li>
+</ul>
+<h3>3. Shared UI Components</h3>
+<ul>
+<li>Use standard UI elements from the <code>lib/shared/widgets/</code> library so that your module matches the Material 3 styling of the rest of the application perfectly.</li>
+</ul>
+
+    </div>
+</body>
+</html>

@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GDG Management Portal - Modular Monolith Task Allocation</title>
+    <style>
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f7f6;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 15px;
+            margin-bottom: 40px;
+        }
+
+        h2 {
+            color: #2c3e50;
+            margin-top: 0;
+        }
+
+        .intro {
+            background: #fff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 40px;
+        }
+
+        .platform-section {
+            margin-bottom: 50px;
+        }
+
+        .platform-title {
+            background: #34495e;
+            color: #fff;
+            padding: 15px 20px;
+            border-radius: 8px 8px 0 0;
+            margin: 0;
+        }
+
+        .dev-card {
+            background: #fff;
+            border: 1px solid #e0e6ed;
+            border-top: none;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
+        }
+
+        .dev-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+        }
+
+        .dev-header h3 {
+            margin: 0;
+            color: #2980b9;
+        }
+
+        .feature-count {
+            background: #e8f4f8;
+            color: #2980b9;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .folder-structure {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin-bottom: 15px;
+            white-space: pre;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ecf0f1;
+            font-size: 0.95em;
+        }
+
+        th {
+            background-color: #f8fafc;
+            color: #7f8c8d;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85em;
+            letter-spacing: 0.5px;
+        }
+
+        tr:hover {
+            background-color: #fbfcfc;
+        }
+
+        .code-id {
+            font-family: monospace;
+            background: #f1f2f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #e74c3c;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>GDG Management Portal <br> Modular Monolith Task Allocation Report</h1>
+
+    <div class="intro">
+        <h2>Architecture & Distribution Strategy</h2>
+        <p>This document ensures an <strong>exactly equal workload</strong> across all 13 developers by explicitly
+            mapping every single feature (43 Web, 43 App, 24 Backend Endpoints). We are utilizing a strict
+            <strong>Modular Monolith / Feature-Based Architecture</strong>.</p>
+        <p><strong>Zero-Conflict Rule:</strong> Each developer is assigned their own specific feature modules (e.g.,
+            <code>modules/tasks/</code>). A developer must place their models, controllers, routes, or UI components
+            strictly inside their assigned module folder. No developer is permitted to write outside their module.</p>
+    </div>
+
+    <!-- BACKEND SECTION -->
+    <div class="platform-section">
+        <h2 class="platform-title">Backend Team (4 Developers) - Node and Express JS</h2>
+
+        <!-- Backend Dev 1 -->
+        <div class="dev-card">
+            <div class="dev-header">
+                <h3>Backend Dev 1: Users & Auth Module</h3>
+                <span class="feature-count">6 Endpoints + 1 DB Model</span>
+            </div>
+            <div class="folder-structure">
+                backend/src/dev1_auth_users/
+                ├── controllers/
+                │ ├── auth.controller.js
+                │ └── users.controller.js
+                ├── routes/
+                │ ├── auth.routes.js
+                │ └── users.routes.js
+                ├── services/
+                │ └── notifs.service.js
+                └── models/
+                └── UserModel.js
+            </div>
+            <table>
+                <tr>
+                    <th>Code</th>
+                    <th>Feature Name</th>
+                    <th>Responsibility</th>
+                </tr>
+                <tr>
+                    <td><span class="code-id">API-01</span></td>
+                    <td>User Login & Auth</td>
+                    <td>JWT Auth, bcrypt password hashing.</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">API-02</span></td>
+                    <td>Get User Profile & Stats</td>
+                    <td>Decode JWT, return stats.</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">API-03</span></td>
+                    <td>Team Directory & Search</td>
+                    <td>Text-index search across collections.</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">API-04</span></td>
+                    <td>Forgot / Reset Password</td>
+                    <td>OTP/Token generation and email.</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">API-05</span></td>
+                    <td>Bulk Member Upload (Admin)</td>
+                    <td>Parse CSV, bulk insert.</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">API-06</span></td>
+                    <td>Member Management (Admin)</td>
+                    <td>Modify status, update volatile_data.</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Backend Dev 2 -->
+        <div class="dev-card">
+            <div class="dev-header">
+                <h3>Backend Dev 2: Core Business Module (Tasks, Forms, Repo)</h3>
+                <span class="feature-count">6 Endpoints + 5 DB Models</span>
+            </div>
+            <div class="folder-structure">
+                backend/src/dev2_tasks_forms/
+                ├── controllers/
+                │ ├── tasks.controller.js
+                │ ├── forms.controller.js
+                │ ├── leaves.controller.js
+                │ └── repo.controller.js
+                ├── routes/
+                │ ├── tasks.routes.js
+                │ ├── forms.routes.js
+                │ ├── leaves.routes.js
+                │ └── repo.routes.js
+                └── models/
+                ├── TaskModel.js
+                ├── FormModel.js
+                └── LeaveModel.js
+            </div>
+            <table>
+                <tr>
+                    <th>Code</th>
+                    <th>Feature Name</th>
+                    <th>Responsibility</th>
+                </tr>
+                <tr>
+                    <td><span class="code-id">API-08</span></td>
+                    <td>Fetch Tasks</td>
+                    <td>Pagination and filtering.</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">API-09</span></td>
+                    <td>Create & Assign Task</td>
+                    <td>Async trigger notifications.</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">API-10</span></td>
+                    <td>Task Workflow</td>
+                    <td>Accept/Submit/Review actions.</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">API-13</span></td>
+                    <td>Forms & Submissions</td>
+                    <td>JSON validation, aggregated responses.</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">API-14</span></td>
+                    <td>Leave Applications</td>
+                    <td>Approve/Reject leaves.</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">API-15</span></td>
+                    <td>Upload & Fetch Assets</td>
+                    <td>Multipart AWS S3 uploads.</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Backend Dev 3 -->
+        <div class="dev-card">
+            <div class="dev-header">
+                <h3>Backend Dev 3: Real-Time Chat & Analytics</h3>
+                <span class="feature-count">6 Endpoints (2 REST, 4 WS) + 2 DB Models</span>
+            </div>
+            <div class="folder-structure">
+                backend/src/dev3_chat_analytics/
+                ├── controllers/
+                │ ├── chat.controller.js
+                │ └── analytics.controller.js
+                ├── routes/
+                │ ├── chat.routes.js
+                │ └── analytics.routes.js
+                ├── sockets/
+                │ └── chat.socket.js
+                └── models/
+                ├── ChannelModel.js
+                └── ChatModel.js
+            </div>
+            <table>
+                <tr>
+                    <th>Code</th>
+                    <th>Feature Name</th>
+                    <th>Responsibility</th>
+                </tr>
+                <tr>
+                    <td><span class="code-id">API-16</span></td>
+                    <td>Chat Initialization</td>
+                    <td>Fetch channels & history.</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">WS-01</span></td>
+                    <td>Socket Connection & Auth</td>
+                    <td>JWT socket auth, subscribe rooms.</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">WS-02</span></td>
+                    <td>Join / Leave Channel</td>
+                    <td>Verify access, join room.</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">WS-03</span></td>
+                    <td>Send Message</td>
+                    <td>Broadcast msg, process attachments.</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">WS-04</span></td>
+                    <td>Typing Indicators</td>
+                    <td>Broadcast typing status.</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">API-19</span></td>
+                    <td>Analytics Dashboard</td>
+                    <td>MongoDB aggregation pipelines.</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Backend Dev 4 -->
+        <div class="dev-card">
+            <div class="dev-header">
+                <h3>Backend Dev 4: Admin Security, Meetings & Notifications</h3>
+                <span class="feature-count">6 Endpoints (5 REST, 1 WS) + 4 DB Models</span>
+            </div>
+            <div class="folder-structure">
+                backend/src/dev4_admin_meetings/
+                ├── controllers/
+                │ ├── iam.controller.js
+                │ └── meetings.controller.js
+                ├── routes/
+                │ ├── iam.routes.js
+                │ └── meetings.routes.js
+                ├── middlewares/
+                │ └── rbac.middleware.js
+                ├── sockets/
+                │ └── notif.socket.js
+                └── models/
+                ├── RoleModel.js
+                ├── MeetingModel.js
+                └── NotificationModel.js
+            </div>
+            <table>
+                <tr>
+                    <th>Code</th>
+                    <th>Feature Name</th>
+                    <th>Responsibility</th>
+                </tr>
+                <tr>
+                    <td><span class="code-id">API-07</span></td>
+                    <td>Manage Roles & Policies</td>
+                    <td>CRUD dynamic roles, RBAC Middleware.</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">API-11</span></td>
+                    <td>Meeting Dashboard</td>
+                    <td>Create and fetch meetings.</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">API-12</span></td>
+                    <td>Attendance & MOM Control</td>
+                    <td>Batch attendance updates.</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">API-17</span></td>
+                    <td>Fetch Notifications</td>
+                    <td>Mark read/unread alerts.</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">API-18</span></td>
+                    <td>Manage Community Updates</td>
+                    <td>Broadcast internal updates.</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">WS-05</span></td>
+                    <td>Real-Time Notifications</td>
+                    <td>Server-to-client push events.</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+
+    <!-- WEB FRONTEND SECTION -->
+    <div class="platform-section">
+        <h2 class="platform-title">Web Frontend Team (5 Developers) - Next.js and JS</h2>
+
+        <!-- Web Dev 1 -->
+        <div class="dev-card">
+            <div class="dev-header">
+                <h3>Web Dev 1: Dashboard, Leaves & Repository</h3>
+                <span class="feature-count">9 Features</span>
+            </div>
+            <div class="folder-structure">
+                web/src/app/dev1_dashboard_registry/
+                ├── dashboard/ (W01-W07)
+                │ ├── api/
+                │ ├── hooks/
+                │ ├── components/
+                │ └── DashboardPage.jsx
+                ├── repository/ (W22)
+                │ ├── api/
+                │ ├── components/
+                │ └── RepoPage.jsx
+                └── leaves/ (W21)
+                ├── api/
+                ├── components/
+                └── LeavesPage.jsx
+            </div>
+            <table>
+                <tr>
+                    <th>Codes</th>
+                    <th>Feature Names</th>
+                </tr>
+                <tr>
+                    <td><span class="code-id">W01</span> <span class="code-id">W02</span> <span
+                            class="code-id">W03</span></td>
+                    <td>Welcome Message, Member/Task Stats, Today's Meeting</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">W04</span> <span class="code-id">W05</span> <span
+                            class="code-id">W06</span></td>
+                    <td>My Tasks, Quick Action Buttons, Community Updates Graph</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">W07</span> <span class="code-id">W21</span> <span
+                            class="code-id">W22</span></td>
+                    <td>Global Search Bar, Leave Application Management, Essential Documents</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Web Dev 2 -->
+        <div class="dev-card">
+            <div class="dev-header">
+                <h3>Web Dev 2: Tasks, Calendar & Registry Tables</h3>
+                <span class="feature-count">9 Features</span>
+            </div>
+            <div class="folder-structure">
+                web/src/app/dev2_tasks_calendar/
+                ├── tasks/ (W08-W13)
+                │ ├── api/
+                │ ├── hooks/
+                │ ├── components/
+                │ └── TasksPage.jsx
+                ├── registry/ (W19-W20)
+                │ ├── api/
+                │ ├── components/
+                │ └── RegistryPage.jsx
+                └── docs/ (W32)
+                ├── api/
+                ├── components/
+                └── DocsPage.jsx
+            </div>
+            <table>
+                <tr>
+                    <th>Codes</th>
+                    <th>Feature Names</th>
+                </tr>
+                <tr>
+                    <td><span class="code-id">W08</span> <span class="code-id">W09</span> <span
+                            class="code-id">W10</span></td>
+                    <td>Calendar View, Tasks List View, Add Task Button</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">W11</span> <span class="code-id">W12</span> <span
+                            class="code-id">W13</span></td>
+                    <td>Task Filters, Task Workflow & Table, Task Activity Log</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">W19</span> <span class="code-id">W20</span> <span
+                            class="code-id">W32</span></td>
+                    <td>Tables of Works, Tables of Meeting, Detailed Documentation</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Web Dev 3 -->
+        <div class="dev-card">
+            <div class="dev-header">
+                <h3>Web Dev 3: Meetings & Dynamic Forms</h3>
+                <span class="feature-count">9 Features</span>
+            </div>
+            <div class="folder-structure">
+                web/src/app/dev3_meetings_forms/
+                ├── meetings/ (W14-W18)
+                │ ├── api/
+                │ ├── hooks/
+                │ ├── components/
+                │ └── MeetingsPage.jsx
+                └── forms/ (W23-W26)
+                ├── api/
+                ├── hooks/
+                ├── components/
+                └── FormsPage.jsx
+            </div>
+            <table>
+                <tr>
+                    <th>Codes</th>
+                    <th>Feature Names</th>
+                </tr>
+                <tr>
+                    <td><span class="code-id">W14</span> <span class="code-id">W15</span> <span
+                            class="code-id">W16</span></td>
+                    <td>Meeting Dashboards, Create Meeting, Meeting Filters</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">W17</span> <span class="code-id">W18</span> <span
+                            class="code-id">W23</span></td>
+                    <td>Summary & Attendance, Integrated Meeting Link, Active Form Cards</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">W24</span> <span class="code-id">W25</span> <span
+                            class="code-id">W26</span></td>
+                    <td>Form Fillup Fields, Form Instructions, Form Responses Dashboard</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Web Dev 4 -->
+        <div class="dev-card">
+            <div class="dev-header">
+                <h3>Web Dev 4: Profile, Auth & User Settings</h3>
+                <span class="feature-count">9 Features</span>
+            </div>
+            <div class="folder-structure">
+                web/src/app/dev4_profile_auth/
+                ├── auth/ (W31, W36)
+                │ ├── api/
+                │ ├── hooks/
+                │ ├── components/
+                │ └── LoginPage.jsx
+                ├── profile/ (W27-W30)
+                │ ├── api/
+                │ ├── components/
+                │ └── ProfilePage.jsx
+                └── communications_misc/ (W33-W35)
+                ├── api/
+                ├── components/
+                └── MiscPage.jsx
+            </div>
+            <table>
+                <tr>
+                    <th>Codes</th>
+                    <th>Feature Names</th>
+                </tr>
+                <tr>
+                    <td><span class="code-id">W27</span> <span class="code-id">W28</span> <span
+                            class="code-id">W29</span></td>
+                    <td>User Profile, Sidebar Options, Dark / Light Mode</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">W30</span> <span class="code-id">W31</span> <span
+                            class="code-id">W33</span></td>
+                    <td>Developer Mode, Login & Auth, Terms and Conditions</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">W34</span> <span class="code-id">W35</span> <span
+                            class="code-id">W36</span></td>
+                    <td>Notification Center (Bell), Team Directory, Forgot Password Flow</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Web Dev 5 -->
+        <div class="dev-card">
+            <div class="dev-header">
+                <h3>Web Dev 5: Admin IAM & Real-Time Chat</h3>
+                <span class="feature-count">7 Features (High Complexity)</span>
+            </div>
+            <div class="folder-structure">
+                web/src/app/dev5_admin_chat/
+                ├── admin/ (W37-W41)
+                │ ├── api/
+                │ ├── hooks/
+                │ ├── components/
+                │ └── AdminDash.jsx
+                └── chat/ (W42-W43)
+                ├── api/
+                ├── hooks/
+                ├── components/
+                └── ChatApp.jsx
+            </div>
+            <table>
+                <tr>
+                    <th>Codes</th>
+                    <th>Feature Names</th>
+                </tr>
+                <tr>
+                    <td><span class="code-id">W37</span> <span class="code-id">W38</span> <span
+                            class="code-id">W39</span></td>
+                    <td>Admin Dashboard, Member Management, Application Approvals</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">W40</span> <span class="code-id">W41</span></td>
+                    <td>Dynamic Roles & IAM UI, Bulk Member Upload (CSV)</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">W42</span> <span class="code-id">W43</span></td>
+                    <td>Core Chat (WebSockets), Advanced Chat (Files & Mentions)</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+
+    <!-- APP FRONTEND SECTION -->
+    <div class="platform-section">
+        <h2 class="platform-title" style="background: #e67e22;">Mobile App Team (4 Developers) - Flutter (Dart)</h2>
+
+        <!-- App Dev 1 -->
+        <div class="dev-card">
+            <div class="dev-header">
+                <h3>App Dev 1: Dashboard, Registry & Leaves</h3>
+                <span class="feature-count">11 Features</span>
+            </div>
+            <div class="folder-structure">
+                app/lib/features/dev1_dashboard_registry/
+                ├── screens/
+                │ ├── DashboardScreen.dart
+                │ ├── WorksTable.dart
+                │ ├── MeetingTable.dart
+                │ ├── LeavesScreen.dart
+                │ └── RepoScreen.dart
+                └── components/
+                ├── UpdatesGraph.dart
+                └── GlobalSearch.dart
+            </div>
+            <table>
+                <tr>
+                    <th>Codes</th>
+                    <th>Feature Names</th>
+                </tr>
+                <tr>
+                    <td><span class="code-id">A01</span> <span class="code-id">A02</span> <span
+                            class="code-id">A03</span></td>
+                    <td>Welcome Message, Member/Task Stats, Today's Meeting</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">A04</span> <span class="code-id">A05</span> <span
+                            class="code-id">A06</span></td>
+                    <td>My Tasks, Quick Action Buttons, Updates Graph</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">A07</span> <span class="code-id">A19</span> <span
+                            class="code-id">A20</span></td>
+                    <td>Global Search, Tables of Works, Tables of Meeting</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">A21</span> <span class="code-id">A22</span></td>
+                    <td>Leave Application, Essential Documents</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- App Dev 2 -->
+        <div class="dev-card">
+            <div class="dev-header">
+                <h3>App Dev 2: Tasks, Forms & Notifications</h3>
+                <span class="feature-count">11 Features</span>
+            </div>
+            <div class="folder-structure">
+                app/lib/features/dev2_tasks_forms/
+                ├── screens/
+                │ ├── TasksScreen.dart
+                │ ├── CalendarScreen.dart
+                │ ├── FormsScreen.dart
+                │ └── FormResponses.dart
+                └── components/
+                ├── ActivityLog.dart
+                ├── DynamicFields.dart
+                └── NotifBell.dart
+            </div>
+            <table>
+                <tr>
+                    <th>Codes</th>
+                    <th>Feature Names</th>
+                </tr>
+                <tr>
+                    <td><span class="code-id">A08</span> <span class="code-id">A09</span> <span
+                            class="code-id">A10</span></td>
+                    <td>Calendar View, Tasks List View, Add Task Button</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">A11</span> <span class="code-id">A12</span> <span
+                            class="code-id">A13</span></td>
+                    <td>Task Filters, Task Workflow, Task Activity Log</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">A23</span> <span class="code-id">A24</span> <span
+                            class="code-id">A25</span></td>
+                    <td>Active Forms, Form Fillup Fields, Form Instructions</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">A26</span> <span class="code-id">A34</span></td>
+                    <td>Form Responses Dashboard, Notification Center (Bell)</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- App Dev 3 -->
+        <div class="dev-card">
+            <div class="dev-header">
+                <h3>App Dev 3: Meetings, Profile & Auth</h3>
+                <span class="feature-count">11 Features</span>
+            </div>
+            <div class="folder-structure">
+                app/lib/features/dev3_meetings_profile/
+                ├── screens/
+                │ ├── MeetingsScreen.dart
+                │ ├── MeetDetails.dart
+                │ ├── ProfileScreen.dart
+                │ ├── LoginScreen.dart
+                │ └── DirectoryScreen.dart
+                └── components/
+                ├── SidebarDrawer.dart
+                └── ThemeToggle.dart
+            </div>
+            <table>
+                <tr>
+                    <th>Codes</th>
+                    <th>Feature Names</th>
+                </tr>
+                <tr>
+                    <td><span class="code-id">A14</span> <span class="code-id">A15</span> <span
+                            class="code-id">A16</span></td>
+                    <td>Meeting Dashboards, Create Meeting, Meeting Filters</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">A17</span> <span class="code-id">A18</span> <span
+                            class="code-id">A27</span></td>
+                    <td>Summary & Attendance, Integrated Meeting, User Profile</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">A28</span> <span class="code-id">A29</span> <span
+                            class="code-id">A31</span></td>
+                    <td>Sidebar Options, Dark / Light Mode, Login & Auth</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">A35</span> <span class="code-id">A36</span></td>
+                    <td>Team Directory, Forgot Password Flow</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- App Dev 4 -->
+        <div class="dev-card">
+            <div class="dev-header">
+                <h3>App Dev 4: Admin IAM, Real-Time Chat & Misc</h3>
+                <span class="feature-count">10 Features (High Complexity)</span>
+            </div>
+            <div class="folder-structure">
+                app/lib/features/dev4_admin_chat/
+                ├── screens/
+                │ ├── AdminScreen.dart
+                │ ├── IAMConfigScreen.dart
+                │ ├── ChatScreen.dart
+                │ ├── DocsScreen.dart
+                │ └── TermsScreen.dart
+                └── components/
+                └── DevModeToggle.dart
+            </div>
+            <table>
+                <tr>
+                    <th>Codes</th>
+                    <th>Feature Names</th>
+                </tr>
+                <tr>
+                    <td><span class="code-id">A37</span> <span class="code-id">A38</span> <span
+                            class="code-id">A39</span></td>
+                    <td>Admin Dashboard, Member Management, Application Approvals</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">A40</span> <span class="code-id">A41</span> <span
+                            class="code-id">A42</span></td>
+                    <td>IAM UI, Bulk Member Upload, Core Chat</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">A43</span> <span class="code-id">A30</span> <span
+                            class="code-id">A32</span></td>
+                    <td>Advanced Chat (Files/Mentions), Developer Mode, Documentation</td>
+                </tr>
+                <tr>
+                    <td><span class="code-id">A33</span></td>
+                    <td>Terms and Conditions</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- FULL FOLDER STRUCTURE -->
+    <div class="intro" style="margin-top: 50px;">
+        <h2 style="color: #8e44ad; border-bottom: 2px solid #8e44ad; padding-bottom: 10px;">Detailed Folder Structures
+        </h2>
+        <p>This is the complete bird's-eye view of the project repositories. Notice how every single platform strictly
+            isolates its code into feature modules to prevent any Git conflicts.</p>
+
+        <h3 style="color: #2ecc71; margin-top: 30px;">1. Backend Repository (Node.js/Express)</h3>
+        <div class="folder-structure" style="font-size: 14px; line-height: 1.4;">
+            backend/src/
+            │
+            ├── dev1_auth_users/ <span style="color: #3498db;">&lt;-- Backend Dev 1 works ONLY here</span>
+            │ ├── controllers/
+            │ │ ├── auth.controller.js (API-01, API-04)
+            │ │ └── users.controller.js(API-02, API-03, API-05, API-06)
+            │ ├── routes/
+            │ │ ├── auth.routes.js
+            │ │ └── users.routes.js
+            │ ├── services/
+            │ │ └── notifs.service.js (API-17, API-18)
+            │ └── models/
+            │ └── UserModel.js
+            │
+            ├── dev2_core_business/ <span style="color: #3498db;">&lt;-- Backend Dev 2 works ONLY here</span>
+            │ ├── controllers/
+            │ │ ├── tasks.controller.js(API-08, API-09, API-10)
+            │ │ ├── forms.controller.js(API-13)
+            │ │ ├── leaves.controller.js(API-14)
+            │ │ └── repo.controller.js (API-15)
+            │ ├── routes/
+            │ │ ├── tasks.routes.js
+            │ │ ├── forms.routes.js
+            │ │ ├── leaves.routes.js
+            │ │ └── repo.routes.js
+            │ └── models/
+            │ ├── TaskModel.js
+            │ ├── FormModel.js
+            │ ├── FormSubmissionModel.js
+            │ ├── LeaveApplicationModel.js
+            │ └── RepositoryModel.js
+            │
+            ├── dev3_realtime_chat/ <span style="color: #3498db;">&lt;-- Backend Dev 3 works ONLY here</span>
+            │ ├── sockets/
+            │ │ └── chat.socket.js (WS-01, WS-02, WS-03, WS-04)
+            │ ├── controllers/
+            │ │ ├── chat.controller.js (API-16)
+            │ │ └── stats.controller.js(API-19)
+            │ ├── routes/
+            │ │ ├── chat.routes.js
+            │ │ └── analytics.routes.js
+            │ └── models/
+            │ ├── ChannelModel.js
+            │ └── ChatModel.js
+            │
+            └── dev4_admin_meetings/ <span style="color: #3498db;">&lt;-- Backend Dev 4 works ONLY here</span>
+            ├── controllers/
+            │ ├── iam.controller.js (API-07)
+            │ └── meet.controller.js (API-11, API-12)
+            ├── sockets/
+            │ └── alerts.socket.js (WS-05)
+            ├── routes/
+            │ ├── iam.routes.js
+            │ └── meetings.routes.js
+            └── models/
+            ├── RoleModel.js
+            ├── PolicyModel.js
+            ├── MeetingModel.js
+            ├── AttendanceModel.js
+            ├── NotificationModel.js
+            └── UpdatesModel.js
+        </div>
+
+        <h3 style="color: #3498db; margin-top: 40px;">2. Web Frontend Repository (React/Next.js)</h3>
+        <div class="folder-structure" style="font-size: 14px; line-height: 1.4;">
+            web/src/
+            │
+            ├── shared/ <span style="color: #95a5a6;">&lt;-- Global Shared Resources</span>
+            │ ├── components/
+            │ ├── hooks/
+            │ ├── api/
+            │ │ ├── axios.js
+            │ │ └── apiClient.js
+            │ ├── utils/
+            │ ├── constants/
+            │ └── assets/
+            │
+            └── features/
+            │
+            ├── dev1_dashboard_repo/ <span style="color: #e74c3c;">&lt;-- Web Dev 1 works ONLY here</span>
+            │ ├── dashboard/
+            │ │ ├── api/
+            │ │ ├── hooks/
+            │ │ ├── components/
+            │ │ │ ├── UpdatesGraph.jsx (W06)
+            │ │ │ └── GlobalSearch.jsx (W07)
+            │ │ ├── services/
+            │ │ ├── utils/
+            │ │ └── DashboardPage.jsx (W01-W05)
+            │ ├── leaves/
+            │ │ ├── api/
+            │ │ ├── components/
+            │ │ └── LeavesPage.jsx (W21)
+            │ └── repository/
+            │ ├── api/
+            │ ├── components/
+            │ └── RepositoryPage.jsx (W22)
+            │
+            ├── dev2_tasks_registry/ <span style="color: #e74c3c;">&lt;-- Web Dev 2 works ONLY here</span>
+            │ ├── tasks/
+            │ │ ├── api/
+            │ │ ├── hooks/
+            │ │ ├── components/
+            │ │ │ └── ActivityLog.jsx (W13)
+            │ │ ├── services/
+            │ │ └── TasksPage.jsx (W09-W12)
+            │ ├── calendar/
+            │ │ ├── api/
+            │ │ ├── components/
+            │ │ └── CalendarPage.jsx (W08)
+            │ └── registry/
+            │ ├── api/
+            │ ├── components/
+            │ ├── WorksTablePage.jsx (W19)
+            │ ├── MeetingTable.jsx (W20)
+            │ └── DocsPage.jsx (W32)
+            │
+            ├── dev3_meetings_forms/ <span style="color: #e74c3c;">&lt;-- Web Dev 3 works ONLY here</span>
+            │ ├── meetings/
+            │ │ ├── api/
+            │ │ ├── hooks/
+            │ │ ├── components/
+            │ │ ├── MeetingsPage.jsx (W14-W16, W18)
+            │ │ └── MeetingDetails.jsx (W17)
+            │ └── forms/
+            │ ├── api/
+            │ ├── hooks/
+            │ ├── components/
+            │ │ └── DynamicFields.jsx (W24)
+            │ ├── ActiveForms.jsx (W23, W25)
+            │ └── FormResponses.jsx (W26)
+            │
+            ├── dev4_auth_profile/ <span style="color: #e74c3c;">&lt;-- Web Dev 4 works ONLY here</span>
+            │ ├── auth/
+            │ │ ├── api/
+            │ │ ├── hooks/
+            │ │ ├── components/
+            │ │ ├── LoginPage.jsx (W31, W36)
+            │ │ └── TermsPage.jsx (W33)
+            │ ├── profile/
+            │ │ ├── api/
+            │ │ ├── components/
+            │ │ ├── ProfilePage.jsx (W27)
+            │ │ └── DirectoryPage.jsx (W35)
+            │ └── layout/
+            │ ├── components/
+            │ │ ├── Sidebar.jsx (W28)
+            │ │ ├── ThemeToggle.jsx (W29)
+            │ │ ├── DevModeToggle.jsx (W30)
+            │ │ └── NotifBell.jsx (W34)
+            │
+            └── dev5_admin_chat/ <span style="color: #e74c3c;">&lt;-- Web Dev 5 works ONLY here</span>
+            ├── admin/
+            │ ├── api/
+            │ ├── hooks/
+            │ ├── components/
+            │ ├── AdminDash.jsx (W37-W39, W41)
+            │ └── IAMConfig.jsx (W40)
+            └── chat/
+            ├── api/
+            ├── hooks/
+            ├── components/
+            │ ├── ChatSidebar.jsx
+            │ └── ChatWindow.jsx
+            └── ChatApp.jsx (W42, W43)
+        </div>
+
+        <h3 style="color: #e67e22; margin-top: 40px;">3. App Frontend Repository (Flutter)</h3>
+        <div class="folder-structure" style="font-size: 14px; line-height: 1.4;">
+            app/lib/features/
+            │
+            ├── dev1_dashboard_registry/ <span style="color: #9b59b6;">&lt;-- App Dev 1 works ONLY here</span>
+            │ ├── screens/
+            │ │ ├── DashboardScreen.dart (A01, A02, A03, A04, A05)
+            │ │ ├── WorksTable.dart (A19)
+            │ │ ├── MeetingTable.dart (A20)
+            │ │ ├── LeavesScreen.dart (A21)
+            │ │ └── RepoScreen.dart (A22)
+            │ └── components/
+            │ ├── UpdatesGraph.dart (A06)
+            │ └── GlobalSearch.dart (A07)
+            │
+            ├── dev2_tasks_forms/ <span style="color: #9b59b6;">&lt;-- App Dev 2 works ONLY here</span>
+            │ ├── screens/
+            │ │ ├── TasksScreen.dart (A09, A10, A11, A12)
+            │ │ ├── CalendarScreen.dart (A08)
+            │ │ ├── FormsScreen.dart (A23, A25)
+            │ │ └── FormResponses.dart (A26)
+            │ └── components/
+            │ ├── ActivityLog.dart (A13)
+            │ ├── DynamicFields.dart (A24)
+            │ └── NotifBell.dart (A34)
+            │
+            ├── dev3_meetings_profile/ <span style="color: #9b59b6;">&lt;-- App Dev 3 works ONLY here</span>
+            │ ├── screens/
+            │ │ ├── MeetingsScreen.dart (A14, A15, A16, A18)
+            │ │ ├── MeetDetails.dart (A17)
+            │ │ ├── ProfileScreen.dart (A27)
+            │ │ ├── LoginScreen.dart (A31, A36)
+            │ │ └── DirectoryScreen.dart (A35)
+            │ └── components/
+            │ ├── SidebarDrawer.dart (A28)
+            │ └── ThemeToggle.dart (A29)
+            │
+            └── dev4_admin_chat/ <span style="color: #9b59b6;">&lt;-- App Dev 4 works ONLY here</span>
+            ├── screens/
+            │ ├── AdminScreen.dart (A37, A38, A39, A41)
+            │ ├── IAMConfigScreen.dart (A40)
+            │ ├── ChatScreen.dart (A42, A43)
+            │ ├── DocsScreen.dart (A32)
+            │ └── TermsScreen.dart (A33)
+            └── components/
+            └── DevModeToggle.dart (A30)
+        </div>
+    </div>
+</body>
+
+</html>

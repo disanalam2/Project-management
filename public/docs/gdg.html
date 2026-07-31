@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Technical Handoff Guide</title>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            background: #f8fafc;
+            color: #334155;
+            overflow: hidden;
+        }
+
+        #sidebar {
+            width: 320px;
+            background: #1e293b;
+            color: white;
+            overflow-y: auto;
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #sidebar h2 {
+            text-align: center;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 15px;
+            color: #f8fafc;
+        }
+
+        .toc-link {
+            display: block;
+            color: #cbd5e1;
+            text-decoration: none;
+            padding: 14px 24px;
+            border-left: 4px solid transparent;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+        }
+
+        .toc-link:hover {
+            background: #334155;
+            color: white;
+        }
+
+        .toc-link.active {
+            background: #3b82f6;
+            border-left-color: #60a5fa;
+            color: white;
+            font-weight: bold;
+        }
+
+        #content {
+            flex: 1;
+            padding: 40px 60px;
+            overflow-y: auto;
+            background: white;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .dev-section {
+            max-width: 900px;
+            margin: auto;
+            padding-bottom: 100px;
+        }
+
+        h1 {
+            color: #0f172a;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+            font-size: 2.2rem;
+        }
+
+        h2 {
+            color: #1e293b;
+            margin-top: 40px;
+        }
+
+        h3 {
+            color: #334155;
+        }
+
+        pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Fira Code', monospace;
+        }
+
+        code {
+            font-family: 'Fira Code', monospace;
+            color: #d97706;
+            background: #fef3c7;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        pre code {
+            color: inherit;
+            background: transparent;
+            padding: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            margin-bottom: 30px;
+        }
+
+        th,
+        td {
+            border: 1px solid #e2e8f0;
+            padding: 12px 15px;
+            text-align: left;
+        }
+
+        th {
+            background: #f1f5f9;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        ul,
+        ol {
+            line-height: 1.7;
+        }
+
+        strong {
+            color: #0f172a;
+        }
+    </style>
+    <script>
+        function showSection(id, event) {
+            document.querySelectorAll('.dev-section').forEach(el => el.style.display = 'none');
+            document.getElementById(id).style.display = 'block';
+            document.querySelectorAll('.toc-link').forEach(el => el.classList.remove('active'));
+            if (event) {
+                event.currentTarget.classList.add('active');
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <div id="sidebar">
+        <h2>GDG Master Handoffs</h2>
+        ${tocHTML}
+    </div>
+    <div id="content">
+        ${contentHTML}
+    </div>
+</body>
+
+</html>
