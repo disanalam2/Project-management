@@ -4,15 +4,15 @@ const DeveloperHandoffs = () => {
   const [selectedDoc, setSelectedDoc] = useState('');
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: '20px' }}>
-      <h2 style={{ marginBottom: '20px', color: 'var(--text-main)' }}>Developer Handoffs</h2>
-      <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '15px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: '80vh', padding: '10px' }}>
+      <h2 style={{ marginBottom: '15px', color: 'var(--text-main)' }}>Developer Handoffs</h2>
+      <div style={{ marginBottom: '20px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px' }}>
         <label htmlFor="dev-select" style={{ fontWeight: 'bold', color: 'var(--text-main)' }}>Select Developer:</label>
         <select 
           id="dev-select" 
           value={selectedDoc} 
           onChange={(e) => setSelectedDoc(e.target.value)}
-          style={{ padding: '10px 15px', borderRadius: '8px', border: '1px solid var(--border)', outline: 'none', cursor: 'pointer', minWidth: '250px', background: 'var(--card-bg)', color: 'var(--text-main)' }}
+          style={{ padding: '10px 15px', borderRadius: '8px', border: '1px solid var(--border)', outline: 'none', cursor: 'pointer', flex: '1 1 250px', maxWidth: '100%', background: 'var(--card-bg)', color: 'var(--text-main)' }}
         >
           <option value="" disabled>-- Select a Developer Handoff --</option>
           <optgroup label="App Developers">
@@ -38,9 +38,9 @@ const DeveloperHandoffs = () => {
       </div>
       
       {selectedDoc ? (
-        <iframe src={selectedDoc} style={{ flex: 1, border: '1px solid var(--border)', borderRadius: '8px', width: '100%', height: 'calc(100vh - 200px)', background: 'white' }} title="Developer Handoff"></iframe>
+        <iframe src={selectedDoc} style={{ flex: 1, border: '1px solid var(--border)', borderRadius: '8px', width: '100%', minHeight: '60vh', background: 'white' }} title="Developer Handoff"></iframe>
       ) : (
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: '1.2rem', border: '2px dashed var(--border)', borderRadius: '8px' }}>
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: '1rem', textAlign: 'center', padding: '20px', border: '2px dashed var(--border)', borderRadius: '8px', minHeight: '60vh' }}>
           Please select a developer from the dropdown above.
         </div>
       )}
